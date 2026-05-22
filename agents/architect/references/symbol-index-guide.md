@@ -29,6 +29,10 @@ the symbol, get its callers/callees, edit narrowly."
     type satisfying an interface member.
   - `lookup.py --overrides <method-id>` — every override of a base-class
     method (same scan as `--implementers`; different intent).
+  - `lookup.py --untested <node-id>` — public/internal methods and
+    functions on one canonical node with no caller in a classified tests
+    bucket. Use for feature-close triage; use `validate.py --check-untested`
+    for whole-repo gates.
 - When triaging a regression — `blast.py --symbol <name>` or
   `blast.py symbol:<id>` walks one hop of call edges and reports the
   canonical nodes and files reached.
@@ -63,6 +67,15 @@ summary:
     typescript: { files: 40, parsed: 40, cached: 0 }
     python: { files: 0, parsed: 0, cached: 0 }
   disambiguated_ids: 4
+  compilation_roots_by_language:
+    csharp: [backend/src, backend/tests]
+    typescript: [frontend/src, frontend/tests]
+    python: []
+  compilation_roots_hash_by_language:
+    csharp: <sha256>
+    typescript: <sha256>
+    python: <sha256>
+  sidecar_authoritative_languages: [csharp, typescript]
 symbols:
   - id: symbol:entity-customer:customer-service.cancel-async
     node: entity:customer
