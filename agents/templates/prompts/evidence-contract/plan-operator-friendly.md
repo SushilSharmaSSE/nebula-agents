@@ -1,10 +1,27 @@
-Before starting, resolve `{PRODUCT_ROOT}` per `agents/docs/AGENT-USE.md` → Session Setup and echo its absolute path on your first turn; every command below assumes that resolution. This prompt encodes the plan action under the base run evidence contract from `feature-evidence-package-standardization-plan-v2.md` (effective `2026-05-19`). Plan runs BEFORE the feature evidence package exists — it produces planning artifacts in `{FEATURE_PATH}` and a base run evidence package per §8, but no feature evidence package.
+This prompt encodes the plan action under the base run evidence contract from `feature-evidence-package-standardization-plan-v2.md` (effective `2026-05-19`). Plan runs BEFORE the feature evidence package exists — it produces planning artifacts in `{FEATURE_PATH}` and a base run evidence package per §8, but no feature evidence package.
+
+REQUIRED INPUTS (you must set):
+- `FEATURE_ID={F####}`
+- `PHASE={A | B | A+B}` — Phase A is PM requirements; Phase B is Architect architecture; A+B runs both sequentially
+- `FEATURE_MODE={new | existing}` — `new` when the ID is reserved in `REGISTRY.md` but `{FEATURE_PATH}` does not exist; `existing` when the folder already contains at least `PRD.md` and a `STATUS.md` skeleton
+
+OPTIONAL INPUTS (defaults apply when omitted):
+- `PRODUCT_ROOT=` — default: sister-repo per `agents/docs/AGENT-USE.md` → Session Setup; override only for non-standard layouts
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+- `FEATURE_SLUG` — kebab-case slug for `{FEATURE_ID}` from `REGISTRY.md`
+- `FEATURE_PATH` — `{PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}`
+- `FEATURE_EVIDENCE_ROOT` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}`
+- `PLAN_RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start
+- `PLAN_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{PLAN_RUN_ID}` (NOT under a feature evidence root — this is the non-feature base run path per §8)
+
+Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command; every command below assumes that resolution.
 
 Generate `{PLAN_RUN_ID}` once at session start using the contract format `YYYY-MM-DD-[a-z0-9]{8}` — date is the local date, suffix from `python3 -c "import secrets; print(secrets.token_hex(4))"`. Do not use `uuid4`. Do not regenerate after session start.
 
-Create `PLAN_RUN_FOLDER` at `{PRODUCT_ROOT}/planning-mds/operations/evidence/{PLAN_RUN_ID}/` (note: NOT under a feature evidence root — this is the non-feature base run path per §8). Initialize base run files from templates: `README.md`, `action-context.md`, `artifact-trace.md`, `gate-decisions.md`, an empty `commands.log` (JSONL), and an empty `lifecycle-gates.log`.
+Create `PLAN_RUN_FOLDER` at `{PLAN_RUN_FOLDER}/` (note: NOT under a feature evidence root — this is the non-feature base run path per §8). Initialize base run files from templates: `README.md`, `action-context.md`, `artifact-trace.md`, `gate-decisions.md`, an empty `commands.log` (JSONL), and an empty `lifecycle-gates.log`.
 
-Run `agents/actions/plan.md` for `FEATURE_ID={F####}` with `PHASE={A | B | A+B}`. Phase A is PM requirements; Phase B is Architect architecture; A+B runs both sequentially. Determine `FEATURE_MODE` upfront: `new` when `FEATURE_ID` is reserved in `REGISTRY.md` Planned (Reserved IDs) but `{FEATURE_PATH}` does not exist; `existing` when `{FEATURE_PATH}` already contains at least `PRD.md` and a `STATUS.md` skeleton.
+Run `agents/actions/plan.md` for `FEATURE_ID` with `PHASE`. Phase A is PM requirements; Phase B is Architect architecture; A+B runs both sequentially. Determine `FEATURE_MODE` upfront: `new` when `FEATURE_ID` is reserved in `REGISTRY.md` Planned (Reserved IDs) but `{FEATURE_PATH}` does not exist; `existing` when `{FEATURE_PATH}` already contains at least `PRD.md` and a `STATUS.md` skeleton.
 
 Compatibility:
 - `PHASE=A` + `FEATURE_MODE=new` → plan creates `{FEATURE_PATH}` and scaffolds PRD, personas, stories, and the STATUS skeleton
@@ -25,7 +42,7 @@ Load context in this order:
 6. `{PRODUCT_ROOT}/planning-mds/BLUEPRINT.md`
 7. `{PRODUCT_ROOT}/planning-mds/knowledge-graph/solution-ontology.yaml`
 
-Don't generate `{PLAN_RUN_ID}` with `uuid4` or any non-contract format. Don't write or consume `current-run.json`. Don't produce role reports (`g0-*`, `test-*`, `code-review-*`, etc.) — those belong to the feature action's evidence package, not the plan action. Don't create a feature evidence package at `{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{slug}/` during plan; that root is created later by `feature.md`. Don't skip the approval or ontology-sync gates. Don't edit `canonical-nodes.yaml` or `solution-ontology.yaml` outside the Architect phase.
+Don't generate `{PLAN_RUN_ID}` with `uuid4` or any non-contract format. Don't write or consume `current-run.json`. Don't produce role reports (`g0-*`, `test-*`, `code-review-*`, etc.) — those belong to the feature action's evidence package, not the plan action. Don't create a feature evidence package at `{FEATURE_EVIDENCE_ROOT}/` during plan; that root is created later by `feature.md`. Don't skip the approval or ontology-sync gates. Don't edit `canonical-nodes.yaml` or `solution-ontology.yaml` outside the Architect phase.
 
 Append every shell command to `{PLAN_RUN_FOLDER}/commands.log` as JSON Lines per the §13 schema.
 

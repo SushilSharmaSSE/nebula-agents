@@ -1,22 +1,29 @@
 ACTION: agents/actions/feature.md
 
+REQUIRED INPUTS (operator must set before SESSION_SETUP):
+  FEATURE_ID:           {F####}
+
+OPTIONAL INPUTS (defaults apply when omitted):
+  MODE:                 {clean | drift-reconcile}             # default: clean
+  SLICE_ORDER_SOURCE:   {assembly-plan | override}            # default: assembly-plan
+  SLICE_ORDER:          # only when SLICE_ORDER_SOURCE=override; brackets = parallel within entry
+                        #   - {F####-S####}
+                        #   - [{F####-S####}, {F####-S####}]
+  PRODUCT_ROOT:         absolute product repo root            # default: sister-repo per agents/docs/AGENT-USE.md
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+  FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md
+  FEATURE_PATH          = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}
+  ARCHIVE_FEATURE_PATH  = {PRODUCT_ROOT}/planning-mds/features/archive/{FEATURE_ID}-{FEATURE_SLUG}
+  RUN_ID                = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP (e.g. 2026-05-19-5ab6f922)
+
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
 - Echo the resolved absolute {PRODUCT_ROOT} path on the first turn before any shell command
+- Generate {RUN_ID} once at session start using the contract format YYYY-MM-DD-{secrets.token_hex(4)} (8-char hex suffix from cryptographic randomness)
 - All paths and commands below assume that resolution
 
-PARAMETERS:
-  FEATURE_ID:          {F####}
-  FEATURE_PATH:        {PRODUCT_ROOT}/planning-mds/features/{F####-slug}   # POSIX
-  MODE:                {clean | drift-reconcile}
-  SLICE_ORDER_SOURCE:  {assembly-plan | override}
-  # If override:
-  # SLICE_ORDER:
-  #   - {F####-S####}
-  #   - [{F####-S####}, {F####-S####}]   # brackets = parallel within entry
-  RUN_ID:              {YYYY-MM-DD-XXXXXXXX run ID per §11 — date is local-at-session-start; XXXXXXXX is 8-char hex from cryptographic randomness, e.g. secrets.token_hex(4)}
-
-TIER DEFAULTS (start_tier, max_auto_tier):
+TIER DEFAULTS (start_tier, max_auto_tier; selected by MODE):
   clean:            1, 2
   drift-reconcile:  3, 4
 
@@ -52,7 +59,7 @@ FORBIDDEN:
 - Editing shared semantics without prior `blast.py <node>`
 - Continuing after runtime-blocked failure without re-running preflight
 - Skipping any gate (G0–G4.7)
-- Declaring Done without PM agent switch at G4.6
+- Declaring Done without PM agent switch at G4.7
 - Scope widening outside {FEATURE_ID}
 - Climbing past max_auto_tier without a workstate.py escalate event
 
@@ -86,22 +93,24 @@ G2   SELF-REVIEW (per role, with evidence paths)
 G3   CODE + SECURITY REVIEW (parallel)
 G4   APPROVAL — critical=0; high requires explicit mitigation token
 G4.5 SIGNOFF — every Required=Yes role: verdict=PASS, reviewer, date, evidence path under {PRODUCT_ROOT}/planning-mds/operations/evidence/**
-G4.6 PM CLOSEOUT — MUST switch role: read agents/product-manager/SKILL.md before executing (see closeout checklist below)
-G4.7 TRACKER SYNC — validate-trackers.py exit 0
+G4.6 CANDIDATE EVIDENCE VALIDATION — validate-feature-evidence.py --stage G4.6, then validate-trackers.py
+G4.7 PM CLOSEOUT — MUST switch role: read agents/product-manager/SKILL.md before executing (see closeout checklist below)
 
-G4.6 PM CLOSEOUT CHECKLIST:
+G4.7 PM CLOSEOUT CHECKLIST:
 - Read agents/product-manager/SKILL.md (explicit role switch)
 - Update {FEATURE_PATH}/STATUS.md: final overall status, deferred follow-ups, mitigation notes, signoff provenance (append-only; no mutation)
 - Update {PRODUCT_ROOT}/planning-mds/features/REGISTRY.md: status/path transitions (include archive move)
 - Update {PRODUCT_ROOT}/planning-mds/features/ROADMAP.md: Now/Next/Later/Completed placement
 - Update {PRODUCT_ROOT}/planning-mds/BLUEPRINT.md: feature/story status labels and links
-- IF overall_status == "Done": move {FEATURE_PATH} to {PRODUCT_ROOT}/planning-mds/features/archive/{F####-slug}/ and fix impacted links
+- IF overall_status == "Done": move {FEATURE_PATH} to {ARCHIVE_FEATURE_PATH}/ and fix impacted links
 - Update {PRODUCT_ROOT}/planning-mds/knowledge-graph/feature-mappings.yaml: feature path, status, story status
 - Update {PRODUCT_ROOT}/planning-mds/knowledge-graph/code-index.yaml: bindings for every new source file introduced by this feature
 - Update canonical-nodes.yaml ONLY if new shared semantics introduced (route to Architect if so)
 - Capture orphaned stories and deferred follow-ups
 - IF KG changed: python3 {PRODUCT_ROOT}/scripts/kg/validate.py --write-coverage-report
 - python3 {PRODUCT_ROOT}/scripts/kg/validate.py --check-drift MUST exit 0
+- python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}
+- Write the feature evidence root latest-run.json only after patch-prior-manifest.py exits 0
 
 STOP CONDITIONS:
 - runtime preflight fails and cannot be restored
@@ -114,9 +123,9 @@ STOP CONDITIONS:
 
 EXIT VALIDATION (run in order; all exit 0):
 - Applicable backend/frontend/test commands for changed surfaces (inside runtime containers; evidence paths recorded)
-- python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage G4.6
+- python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage G4.6
 - python3 agents/product-manager/scripts/validate-trackers.py
-- python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --stage closeout
+- python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --stage closeout
 - python3 agents/product-manager/scripts/generate-story-index.py {PRODUCT_ROOT}/planning-mds/features/   (if stories changed)
 - IF code in bound files changed: python3 {PRODUCT_ROOT}/scripts/kg/validate.py --regenerate-symbols
 - IF KG changed: python3 {PRODUCT_ROOT}/scripts/kg/validate.py --write-coverage-report

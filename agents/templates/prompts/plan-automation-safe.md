@@ -1,17 +1,24 @@
 ACTION: agents/actions/plan.md
 
+REQUIRED INPUTS (operator must set before SESSION_SETUP):
+  FEATURE_ID:           {F####}
+  MODE:                 {greenfield | refinement | drift-reconcile}
+
+OPTIONAL INPUTS (defaults apply when omitted):
+  PRODUCT_ROOT:         absolute product repo root             # default: sister-repo per agents/docs/AGENT-USE.md
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+  FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md
+  FEATURE_PATH          = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}
+  RUN_ID                = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP (8-char hex suffix from cryptographic randomness)
+
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
 - Echo the resolved absolute {PRODUCT_ROOT} path on the first turn before any shell command
+- Generate {RUN_ID} once at session start
 - All paths and commands below assume that resolution
 
-PARAMETERS:
-  FEATURE_ID:    {F####}
-  FEATURE_PATH:  {PRODUCT_ROOT}/planning-mds/features/{F####-slug}   # POSIX; forward slashes
-  MODE:          {greenfield | refinement | drift-reconcile}
-  RUN_ID:        {uuid4 generated at session start}
-
-TIER DEFAULTS (start_tier, max_auto_tier):
+TIER DEFAULTS (start_tier, max_auto_tier; selected by MODE):
   greenfield:       file-centric, 2
   refinement:       2, 3
   drift-reconcile:  3, 4

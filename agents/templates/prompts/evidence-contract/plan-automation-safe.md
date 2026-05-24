@@ -2,6 +2,21 @@ ACTION: agents/actions/plan.md
 CONTRACT: feature-evidence-package-standardization-plan-v2.md (effective 2026-05-19)
 CONTRACT SCOPE: Plan runs BEFORE the feature evidence package exists. It produces planning artifacts (feature-assembly-plan.md, PRD updates, ADRs, story breakdowns) inside {FEATURE_PATH}. It also produces a base run evidence package per §8 at the non-feature run path.
 
+REQUIRED INPUTS (operator must set before SESSION_SETUP):
+  FEATURE_ID:           {F####}
+  PHASE:                {A | B | A+B}                          # A = PM requirements; B = Architect architecture; A+B = both
+  FEATURE_MODE:         {new | existing}                       # new = reserved ID but folder absent; existing = folder already scaffolded
+
+OPTIONAL INPUTS (defaults apply when omitted):
+  PRODUCT_ROOT:         absolute product repo root             # default: sister-repo per agents/docs/AGENT-USE.md
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+  FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md
+  FEATURE_PATH          = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}
+  FEATURE_EVIDENCE_ROOT = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}
+  PLAN_RUN_ID           = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
+  PLAN_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/{PLAN_RUN_ID}
+
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
 - Echo the resolved absolute {PRODUCT_ROOT} path on the first turn before any shell command
@@ -15,12 +30,6 @@ SESSION_SETUP:
     mkdir -p {PLAN_RUN_FOLDER}
 - Initialize base run files from templates: README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log (empty JSONL), lifecycle-gates.log (empty)
 - Plan runs do NOT create a feature evidence package. The feature evidence root is created later by `agents/actions/feature.md` for the same FEATURE_ID.
-
-PARAMETERS:
-  FEATURE_ID:    {F####}
-  FEATURE_PATH:  {PRODUCT_ROOT}/planning-mds/features/{F####-slug}      # POSIX (created during plan if new)
-  PLAN_RUN_ID:   {YYYY-MM-DD-[a-z0-9]{8}; generated per SESSION_SETUP}
-  PHASE:         {A | B | A+B}   # A = PM requirements; B = Architect architecture; A+B = both
 
 PRECONDITIONS:
 - {PLAN_RUN_FOLDER} created with base run files present
@@ -49,7 +58,7 @@ FORBIDDEN:
 - Generating {PLAN_RUN_ID} with uuid4 or any non-contract format
 - Writing or consuming `current-run.json` for any reason
 - Producing role reports (g0-*, test-*, code-review-*, etc.) — those belong to the feature action's evidence package
-- Creating a feature evidence package at {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{slug}/ during plan
+- Creating a feature evidence package at {FEATURE_EVIDENCE_ROOT}/ during plan
 - Skipping APPROVAL or ONTOLOGY SYNC gates
 - Editing canonical-nodes.yaml or solution-ontology.yaml outside the Architect phase
 

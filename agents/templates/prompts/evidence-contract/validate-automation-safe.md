@@ -2,6 +2,22 @@ ACTION: agents/actions/validate.md
 CONTRACT: feature-evidence-package-standardization-plan-v2.md (effective 2026-05-19)
 CONTRACT SCOPE: Validate is a parallel-agent validation action. Product Manager validates requirements and Architect validates architecture; when implementation is in scope, they additionally invoke the framework validators (validate-feature-evidence.py, validate-trackers.py, kg/validate.py, generate-story-index.py, validate_templates.py) as tools. The action produces a base run evidence package per §8 with per-agent validation reports; it does NOT write into any feature evidence package.
 
+REQUIRED INPUTS (operator must set before SESSION_SETUP):
+  VALIDATION_SCOPE:     {requirements | architecture | implementation | all}
+
+OPTIONAL INPUTS (defaults apply when omitted):
+  FEATURE_ID:           {F####}                              # narrows implementation validation to a single feature
+  STAGE:                {G0|G1|G2|G3|G4.5|G4.6|G4.7|closeout}  # default: closeout (only meaningful when FEATURE_ID is set)
+  RUN_ID:               {YYYY-MM-DD-[a-z0-9]{8}}             # parent feature run ID; required when STAGE is G0..G4.5
+  EFFECTIVE_DATE:       {YYYY-MM-DD}                         # default: 2026-05-19 (framework default); earlier values rejected per §22
+  PRODUCT_ROOT:         absolute product repo root           # default: sister-repo per agents/docs/AGENT-USE.md
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+  VALIDATE_RUN_ID       = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
+  VALIDATE_RUN_FOLDER   = {PRODUCT_ROOT}/planning-mds/operations/evidence/{VALIDATE_RUN_ID}
+  FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md (only when FEATURE_ID is set)
+  EVIDENCE_ROOT         = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG} (only when FEATURE_ID is set)
+
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
 - Echo resolved absolute {PRODUCT_ROOT}
@@ -10,14 +26,6 @@ SESSION_SETUP:
     VALIDATE_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{VALIDATE_RUN_ID}/
     mkdir -p {VALIDATE_RUN_FOLDER}/artifacts
 - Initialize base run files from templates: README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log (empty JSONL), lifecycle-gates.log (empty)
-
-PARAMETERS:
-  VALIDATE_RUN_ID:  {YYYY-MM-DD-[a-z0-9]{8}; generated per SESSION_SETUP}
-  VALIDATION_SCOPE: {requirements | architecture | implementation | all}
-  FEATURE_ID:       {F####}                            # optional; narrows implementation validation to a single feature
-  RUN_ID:           {YYYY-MM-DD-[a-z0-9]{8}}           # parent feature run ID when implementation validation targets an in-progress feature stage before G4.6
-  STAGE:            {G0|G1|G2|G3|G4.5|G4.6|G4.7|closeout}   # for FEATURE_ID-scoped implementation validation; defaults to closeout
-  EFFECTIVE_DATE:   {YYYY-MM-DD; default 2026-05-19}   # rejected if earlier than default per §22
 
 PRECONDITIONS:
 - {VALIDATE_RUN_FOLDER} created with base run files

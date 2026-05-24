@@ -1,12 +1,33 @@
-Before starting, resolve `{PRODUCT_ROOT}` per `agents/docs/AGENT-USE.md` → Session Setup and echo its absolute path on your first turn; every command below assumes that resolution. This prompt encodes the feature evidence contract from `feature-evidence-package-standardization-plan-v2.md` (effective `2026-05-19`).
+This prompt encodes the feature evidence contract from `feature-evidence-package-standardization-plan-v2.md` (effective `2026-05-19`).
+
+REQUIRED INPUTS (you must set):
+- `FEATURE_ID={F####}`
+
+OPTIONAL INPUTS (defaults apply when omitted):
+- `MODE={clean | drift-reconcile}` — default: `clean`
+- `SLICE_ORDER_SOURCE={assembly-plan | override}` — default: `assembly-plan`
+- `SLICE_ORDER=` — required only when `SLICE_ORDER_SOURCE=override`; one entry per slice, brackets denote parallel execution within that entry
+- `PRODUCT_ROOT=` — default: sister-repo resolved per `agents/docs/AGENT-USE.md` → Session Setup; override only for non-standard layouts
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+- `FEATURE_SLUG` — kebab-case slug for `{FEATURE_ID}` from `REGISTRY.md`
+- `FEATURE_PATH` — `{PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}`
+- `ARCHIVE_FEATURE_PATH` — `{PRODUCT_ROOT}/planning-mds/features/archive/{FEATURE_ID}-{FEATURE_SLUG}`
+- `EVIDENCE_ROOT` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}`
+- `RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start (e.g. `2026-05-19-5ab6f922`)
+- `RUN_FOLDER` — `{EVIDENCE_ROOT}/{RUN_ID}`
+- `RUN_ID_PRIOR` — prior approved `run_id` read from `{EVIDENCE_ROOT}/latest-run.json` (null if absent)
+- `RERUN_OF` — null, or `{RUN_ID_PRIOR}` when this run regenerates evidence only
+
+Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command; every command below assumes that resolution.
 
 Generate `{RUN_ID}` once at session start using the contract format `YYYY-MM-DD-[a-z0-9]{8}` — the date is the local date and the 8-character suffix comes from cryptographic randomness, e.g. `python3 -c "import secrets; print(secrets.token_hex(4))"`. Do not use `uuid4`. Do not regenerate `{RUN_ID}` after the session starts. Example: `2026-05-19-5ab6f922`.
 
-Set up the evidence package at session start. `EVIDENCE_ROOT` is `{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{slug}` and `RUN_FOLDER` is `{EVIDENCE_ROOT}/{RUN_ID}`. Create `RUN_FOLDER` and its `artifacts/{coverage,diffs,test-results,security,screenshots}` subfolders. Initialize `evidence-manifest.json` from the manifest template with `status: "draft"`, `rerun_of: null` (unless this is an evidence-only rerun), all required keys present, and skeleton `gate_results`/`role_results`/`files`. Create the base run files (`README.md`, `action-context.md`, `artifact-trace.md`, `gate-decisions.md`) from templates and touch empty `commands.log` and `lifecycle-gates.log`. If `{EVIDENCE_ROOT}/latest-run.json` already exists, capture its `run_id` as `{RUN_ID_PRIOR}` so you can patch it to `superseded` at G4.7.
+Set up the evidence package at session start using `EVIDENCE_ROOT` and `RUN_FOLDER` as declared above. Create `RUN_FOLDER` and its `artifacts/{coverage,diffs,test-results,security,screenshots}` subfolders. Initialize `evidence-manifest.json` from the manifest template with `status: "draft"`, `rerun_of: null` (unless this is an evidence-only rerun), all required keys present, and skeleton `gate_results`/`role_results`/`files`. Create the base run files (`README.md`, `action-context.md`, `artifact-trace.md`, `gate-decisions.md`) from templates and touch empty `commands.log` and `lifecycle-gates.log`. If `{EVIDENCE_ROOT}/latest-run.json` already exists, capture its `run_id` as `{RUN_ID_PRIOR}` so you can patch it to `superseded` at G4.7.
 
 Concurrent-run check: scan `{EVIDENCE_ROOT}/` for any run folder OTHER than `{RUN_FOLDER}` whose `evidence-manifest.json` carries `status: "draft"` or `status: "in-progress"`. If one exists, HALT and reconcile externally before proceeding — the v2 contract assumes serial feature actions per feature (§17). Acceptable states for sibling runs are `status: "approved"` (with prior-run supersession handled at G4.7), `status: "superseded"`, or no sibling runs at all.
 
-Run `agents/actions/feature.md` for `{FEATURE_ID}` at `{PRODUCT_ROOT}/planning-mds/features/{F####-slug}` with `MODE={clean | drift-reconcile}`, `SLICE_ORDER_SOURCE={assembly-plan | override}`, and `RUN_ID` set as above. If this run is an evidence-only rerun, set `RERUN_OF={prior approved RUN_ID}`; otherwise leave it null. If you use an override, keep `SLICE_ORDER` verbatim and only parallelize slices inside the same bracketed entry.
+Run `agents/actions/feature.md` for `{FEATURE_ID}` at `{FEATURE_PATH}` with `MODE`, `SLICE_ORDER_SOURCE`, and `RUN_ID` set as above. If this run is an evidence-only rerun, set `RERUN_OF={RUN_ID_PRIOR}`; otherwise leave it null. If you use an override, keep `SLICE_ORDER` verbatim and only parallelize slices inside the same bracketed entry.
 
 Use these tier defaults exactly:
 - `clean: 1, 2`
@@ -78,7 +99,7 @@ At `G4.7 PM CLOSEOUT`, do all of this:
 - `Update {PRODUCT_ROOT}/planning-mds/features/REGISTRY.md: status/path transitions (include archive move; set Archived Date when archiving)`
 - `Update {PRODUCT_ROOT}/planning-mds/features/ROADMAP.md: Now/Next/Later/Completed placement`
 - `Update {PRODUCT_ROOT}/planning-mds/BLUEPRINT.md: feature/story status labels and links`
-- `IF overall_status in {Done|Completed}: move {FEATURE_PATH} to {PRODUCT_ROOT}/planning-mds/features/archive/{F####-slug}/ and fix impacted links`
+- `IF overall_status in {Done|Completed}: move {FEATURE_PATH} to {ARCHIVE_FEATURE_PATH}/ and fix impacted links`
 - `Update {PRODUCT_ROOT}/planning-mds/knowledge-graph/feature-mappings.yaml: feature path, status, story status`
 - `Update {PRODUCT_ROOT}/planning-mds/knowledge-graph/code-index.yaml: bindings for every new source file introduced by this feature`
 - `Update canonical-nodes.yaml ONLY if new shared semantics introduced (route to Architect if so)`
@@ -87,8 +108,8 @@ At `G4.7 PM CLOSEOUT`, do all of this:
 - `python3 {PRODUCT_ROOT}/scripts/kg/validate.py --check-drift MUST exit 0`
 - Write `pm-closeout.md` with `Final Story Status`, `Archive Decision`, `Deferred Follow-ups`, `Recommendation Acceptances`, `Tracker Updates`, `Validator Results`
 - Finalize `evidence-manifest.json`: set `status=approved`, `feature_state` in `{Done|Completed|Archived}`, `feature_path_at_closeout` resolved, all `gate_results` present
-- If `{RUN_ID_PRIOR}` was captured at session start, patch `{EVIDENCE_ROOT}/{RUN_ID_PRIOR}/evidence-manifest.json` to `status=superseded` (rule `two_approved_runs_without_supersession_fails`)
-- Write `{EVIDENCE_ROOT}/latest-run.json` per §12 schema pointing to `{RUN_FOLDER}`
+- Run `python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}`; it is idempotent and patches all prior approved sibling manifests to `status=superseded` (rule `two_approved_runs_without_supersession_fails`)
+- Write `{EVIDENCE_ROOT}/latest-run.json` per §12 schema pointing to `{RUN_FOLDER}` only after `patch-prior-manifest.py` exits 0
 - Run `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --stage closeout` and confirm exit 0
 
 If a validator defect blocks closeout: prefer to fix the validator and re-run. For defects discovered mid-stage (G0..G4.6), do NOT create the waiver entry yet — log the defect as an open follow-up in the run's `README.md` "Open Follow-ups" section with the defect description and affected rule IDs and continue to the next gate; if the defect is fixed before G4.7, remove the follow-up. If the defect is unresolved at G4.7 (or first discovered at G4.7), record a `waivers.validator_defect` entry in `evidence-manifest.json` with `defect_description`, `affected_rule_ids[]`, `approved_by`, `approved_on`, `follow_up_owner`, and `follow_up_target_date`, and mirror it in `pm-closeout.md` under a `Validator Defects` subsection. Do not bypass with `--evidence-effective-date` — earlier-than-default values are rejected and any override warns.

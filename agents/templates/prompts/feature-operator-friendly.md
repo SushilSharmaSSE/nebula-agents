@@ -1,6 +1,21 @@
-Before starting, resolve `{PRODUCT_ROOT}` per `agents/docs/AGENT-USE.md` → Session Setup and echo its absolute path on your first turn; every command below assumes that resolution.
+REQUIRED INPUTS (you must set):
+- `FEATURE_ID={F####}`
 
-Run `agents/actions/feature.md` for `{FEATURE_ID}` at `{PRODUCT_ROOT}/planning-mds/features/{F####-slug}` with `MODE={clean | drift-reconcile}`, `SLICE_ORDER_SOURCE={assembly-plan | override}`, and `RUN_ID={YYYY-MM-DD-XXXXXXXX run ID per §11 contract — date is local-at-session-start; XXXXXXXX is 8-char hex from cryptographic randomness, e.g. secrets.token_hex(4)}`. If you use an override, keep `SLICE_ORDER` verbatim and only parallelize slices inside the same bracketed entry.
+OPTIONAL INPUTS (defaults apply when omitted):
+- `MODE={clean | drift-reconcile}` — default: `clean`
+- `SLICE_ORDER_SOURCE={assembly-plan | override}` — default: `assembly-plan`
+- `SLICE_ORDER=` — required only when `SLICE_ORDER_SOURCE=override`; one entry per slice, brackets denote parallel execution within that entry
+- `PRODUCT_ROOT=` — default: sister-repo resolved per `agents/docs/AGENT-USE.md` → Session Setup; override only for non-standard layouts
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+- `FEATURE_SLUG` — kebab-case slug for `{FEATURE_ID}` from `REGISTRY.md`
+- `FEATURE_PATH` — `{PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}`
+- `ARCHIVE_FEATURE_PATH` — `{PRODUCT_ROOT}/planning-mds/features/archive/{FEATURE_ID}-{FEATURE_SLUG}`
+- `RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start (8-char hex suffix from cryptographic randomness, e.g. `2026-05-19-5ab6f922`)
+
+Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command; every command below assumes that resolution.
+
+Run `agents/actions/feature.md` for `{FEATURE_ID}` at `{FEATURE_PATH}`. If you use a slice override, keep `SLICE_ORDER` verbatim and only parallelize slices inside the same bracketed entry.
 
 Use these tier defaults exactly:
 - `clean: 1, 2`
@@ -46,32 +61,34 @@ Follow these gates exactly:
 - `G3   CODE + SECURITY REVIEW (parallel)`
 - `G4   APPROVAL — critical=0; high requires explicit mitigation token`
 - `G4.5 SIGNOFF — every Required=Yes role: verdict=PASS, reviewer, date, evidence path under {PRODUCT_ROOT}/planning-mds/operations/evidence/**`
-- `G4.6 PM CLOSEOUT — MUST switch role: read agents/product-manager/SKILL.md before executing (see closeout checklist below)`
-- `G4.7 TRACKER SYNC — validate-trackers.py exit 0`
+- `G4.6 CANDIDATE EVIDENCE VALIDATION — validate-feature-evidence.py --stage G4.6, then validate-trackers.py`
+- `G4.7 PM CLOSEOUT — MUST switch role: read agents/product-manager/SKILL.md before executing (see closeout checklist below)`
 
-At `G4.6 PM CLOSEOUT`, do all of this:
+At `G4.7 PM CLOSEOUT`, do all of this:
 - `Read agents/product-manager/SKILL.md (explicit role switch)`
 - `Update {FEATURE_PATH}/STATUS.md: final overall status, deferred follow-ups, mitigation notes, signoff provenance (append-only; no mutation)`
 - `Update {PRODUCT_ROOT}/planning-mds/features/REGISTRY.md: status/path transitions (include archive move)`
 - `Update {PRODUCT_ROOT}/planning-mds/features/ROADMAP.md: Now/Next/Later/Completed placement`
 - `Update {PRODUCT_ROOT}/planning-mds/BLUEPRINT.md: feature/story status labels and links`
-- `IF overall_status == "Done": move {FEATURE_PATH} to {PRODUCT_ROOT}/planning-mds/features/archive/{F####-slug}/ and fix impacted links`
+- `IF overall_status == "Done": move {FEATURE_PATH} to {ARCHIVE_FEATURE_PATH}/ and fix impacted links`
 - `Update {PRODUCT_ROOT}/planning-mds/knowledge-graph/feature-mappings.yaml: feature path, status, story status`
 - `Update {PRODUCT_ROOT}/planning-mds/knowledge-graph/code-index.yaml: bindings for every new source file introduced by this feature`
 - `Update canonical-nodes.yaml ONLY if new shared semantics introduced (route to Architect if so)`
 - `Capture orphaned stories and deferred follow-ups`
 - `IF KG changed: python3 {PRODUCT_ROOT}/scripts/kg/validate.py --write-coverage-report`
 - `python3 {PRODUCT_ROOT}/scripts/kg/validate.py --check-drift MUST exit 0`
+- `python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}`
+- `Write the feature evidence root latest-run.json only after patch-prior-manifest.py exits 0`
 
-Don’t hand-enumerate schema, ADR, or contract files when lookup output is available. Don’t treat lookup/KG mappings as authoritative over raw artifacts. Don’t edit code without prior `hint.py <path>`. Don’t edit shared semantics without prior `blast.py <node>`. Don’t continue after a runtime-blocked failure without re-running preflight. Don’t skip any gate from `G0` through `G4.7`. Don’t declare Done without the PM switch at `G4.6`. Don’t widen scope outside `{FEATURE_ID}`. Don’t climb past `max_auto_tier` without a `workstate.py escalate` event.
+Don’t hand-enumerate schema, ADR, or contract files when lookup output is available. Don’t treat lookup/KG mappings as authoritative over raw artifacts. Don’t edit code without prior `hint.py <path>`. Don’t edit shared semantics without prior `blast.py <node>`. Don’t continue after a runtime-blocked failure without re-running preflight. Don’t skip any gate from `G0` through `G4.7`. Don’t declare Done without the PM switch at `G4.7`. Don’t widen scope outside `{FEATURE_ID}`. Don’t climb past `max_auto_tier` without a `workstate.py escalate` event.
 
 Stop immediately if runtime preflight cannot be restored, if a critical code or security finding persists after one review cycle, if required signoff is missing reviewer/date/evidence, if a canonical node edit is attempted outside Architect role, if scope drifts outside `{FEATURE_ID}`, if `validate.py` or `validate.py --check-drift` cannot be auto-repaired, or if `INSUFFICIENT_CONTEXT` occurs. `INSUFFICIENT_CONTEXT` means the same thing as in the plan prompt: escalate, open the raw artifacts, and do not proceed with weak matches.
 
 Close the run by executing these in order:
 - `Applicable backend/frontend/test commands for changed surfaces (inside runtime containers; evidence paths recorded)`
-- `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage G4.6`
+- `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage G4.6`
 - `python3 agents/product-manager/scripts/validate-trackers.py`
-- `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --stage closeout`
+- `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --stage closeout`
 - `python3 agents/product-manager/scripts/generate-story-index.py {PRODUCT_ROOT}/planning-mds/features/   (if stories changed)`
 - `IF code in bound files changed: python3 {PRODUCT_ROOT}/scripts/kg/validate.py --regenerate-symbols`
 - `IF KG changed: python3 {PRODUCT_ROOT}/scripts/kg/validate.py --write-coverage-report`

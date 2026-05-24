@@ -4,6 +4,24 @@ CONTRACT SCOPE: Review can run in two modes:
   (a) feature-scoped: writes code-review-report.md and security-review-report.md (when required) INTO an existing feature run folder under the canonical evidence package; the parent feature action drives the gates
   (b) standalone: writes review reports under a base run evidence folder; does NOT produce a feature evidence package
 
+REQUIRED INPUTS (operator must set before SESSION_SETUP):
+  MODE:                 {feature-scoped | standalone}
+  SCOPE:                {feature | path-set | codebase}        # what is being reviewed
+  # When MODE=feature-scoped, also REQUIRED:
+  FEATURE_ID:           {F####}                                # required when MODE=feature-scoped
+  RUN_ID:               {YYYY-MM-DD-[a-z0-9]{8}}               # required when MODE=feature-scoped; the parent feature run ID
+
+OPTIONAL INPUTS (defaults apply when omitted):
+  PATHS:                [path, path, ...]                      # required only when SCOPE=path-set
+  PRODUCT_ROOT:         absolute product repo root             # default: sister-repo per agents/docs/AGENT-USE.md
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+  FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md (only when MODE=feature-scoped)
+  FEATURE_PATH          = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG} (only when MODE=feature-scoped)
+  OUTPUT_FOLDER         = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}/{RUN_ID} (only when MODE=feature-scoped)
+  REVIEW_RUN_ID         = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP (only when MODE=standalone)
+  REVIEW_RUN_FOLDER     = {PRODUCT_ROOT}/planning-mds/operations/evidence/{REVIEW_RUN_ID} (only when MODE=standalone)
+
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
 - Echo resolved absolute {PRODUCT_ROOT}
@@ -11,20 +29,12 @@ SESSION_SETUP:
 - Generate {REVIEW_RUN_ID} once at session start using contract format YYYY-MM-DD-[a-z0-9]{8} (suffix from `secrets.token_hex(4)`). DO NOT use uuid4.
 - For MODE=feature-scoped:
     REQUIRED PARAM: FEATURE_ID, RUN_ID (the parent feature run ID)
-    OUTPUT_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{slug}/{RUN_ID}/
+    OUTPUT_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}/{RUN_ID}/
     DO NOT create a new run folder; OUTPUT_FOLDER must already exist (created by feature.md at G0)
 - For MODE=standalone:
     REVIEW_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{REVIEW_RUN_ID}/
     mkdir -p {REVIEW_RUN_FOLDER}
     Initialize base run files (README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log, lifecycle-gates.log) per §8
-
-PARAMETERS:
-  MODE:           {feature-scoped | standalone}
-  FEATURE_ID:     {F####}                                          # required when MODE=feature-scoped
-  RUN_ID:         {YYYY-MM-DD-[a-z0-9]{8}}                         # parent feature run ID, required when MODE=feature-scoped
-  REVIEW_RUN_ID:  {YYYY-MM-DD-[a-z0-9]{8}}                         # this review's own ID; only relevant when MODE=standalone
-  SCOPE:          {feature | path-set | codebase}                  # what is being reviewed
-  PATHS:          [path, path, ...]                                # for SCOPE=path-set
 
 PRECONDITIONS:
 - For MODE=feature-scoped: feature run folder exists; manifest carries the feature run identity; G0 has been passed
@@ -43,7 +53,7 @@ CONTEXT LOADING ORDER:
 FORBIDDEN:
 - Generating run IDs with uuid4
 - Writing role reports outside {OUTPUT_FOLDER} or {REVIEW_RUN_FOLDER}
-- For feature-scoped MODE: creating a new {FEATURE_ID}-{slug} run folder during review (must use the existing feature run folder)
+- For feature-scoped MODE: creating a new run folder during review (must use the existing {OUTPUT_FOLDER})
 - Mixing feature-scoped and standalone outputs in one session
 - Skipping security review when security_sensitive_scope=true in the feature manifest
 

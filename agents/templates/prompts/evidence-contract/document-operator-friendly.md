@@ -1,12 +1,29 @@
-Before starting, resolve `{PRODUCT_ROOT}` per `agents/docs/AGENT-USE.md` → Session Setup and echo its absolute path on your first turn. This prompt encodes the document action under `feature-evidence-package-standardization-plan-v2.md` (effective `2026-05-19`). Document produces technical documentation (API docs, READMEs, runbooks, developer guides). It is OUTSIDE the feature evidence contract — it does NOT produce role reports for any feature evidence package and does NOT substitute for evidence on a completed terminal feature. It still produces a base run evidence package per §8 so the documentation run itself is auditable.
+This prompt encodes the document action under `feature-evidence-package-standardization-plan-v2.md` (effective `2026-05-19`). Document produces technical documentation (API docs, READMEs, runbooks, developer guides). It is OUTSIDE the feature evidence contract — it does NOT produce role reports for any feature evidence package and does NOT substitute for evidence on a completed terminal feature. It still produces a base run evidence package per §8 so the documentation run itself is auditable.
+
+REQUIRED INPUTS (you must set):
+- `DOC_SCOPE={api | readme | runbook | developer-guide | release-notes | mixed}`
+- `TARGETS=[{path}, ...]` — destination doc files
+
+OPTIONAL INPUTS (defaults apply when omitted):
+- `SOURCE_CODE=[{path}, ...]` — source code basis for the docs (default: derived from `TARGETS`)
+- `FEATURE_REF={F####}` — optional reference for read-only feature context (does NOT make this a feature-scoped run)
+- `PRODUCT_ROOT=` — default: sister-repo per `agents/docs/AGENT-USE.md` → Session Setup; override only for non-standard layouts
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+- `DOC_RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start
+- `DOC_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{DOC_RUN_ID}`
+- `FEATURE_REF_SLUG` — kebab-case slug for `{FEATURE_REF}` from `REGISTRY.md` (only when `FEATURE_REF` is set)
+- `FEATURE_REF_PATH` — `{PRODUCT_ROOT}/planning-mds/features/{FEATURE_REF}-{FEATURE_REF_SLUG}` (only when `FEATURE_REF` is set)
+
+Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command.
 
 Generate `{DOC_RUN_ID}` once at session start using the contract format `YYYY-MM-DD-[a-z0-9]{8}` (suffix from `python3 -c "import secrets; print(secrets.token_hex(4))"`). Do not use `uuid4`.
 
-Create `DOC_RUN_FOLDER` at `{PRODUCT_ROOT}/planning-mds/operations/evidence/{DOC_RUN_ID}/` and initialize the six §8 base run files from templates.
+Create `DOC_RUN_FOLDER` at `{DOC_RUN_FOLDER}/` and initialize the six §8 base run files from templates.
 
-Run `agents/actions/document.md` with `DOC_SCOPE={api | readme | runbook | developer-guide | release-notes | mixed}`, `TARGETS=[{path}, ...]` (destination doc files), optionally `SOURCE_CODE=[{path}, ...]` (the code basis for the docs), and optionally `FEATURE_REF={F####}` for context only — `FEATURE_REF` does NOT make this a feature-scoped run.
+Run `agents/actions/document.md` with `DOC_SCOPE`, `TARGETS`, optionally `SOURCE_CODE`, and optionally `FEATURE_REF` for context only — `FEATURE_REF` does NOT make this a feature-scoped run.
 
-Load context in this order: `agents/ROUTER.md` → `agents/agent-map.yaml` → `agents/docs/AGENT-USE.md` → `agents/actions/document.md` → `agents/technical-writer/SKILL.md` → `SOURCE_CODE` paths read-only → for `FEATURE_REF`, the feature's `README.md`, `PRD.md`, and `feature-assembly-plan.md` read-only.
+Load context in this order: `agents/ROUTER.md` → `agents/agent-map.yaml` → `agents/docs/AGENT-USE.md` → `agents/actions/document.md` → `agents/technical-writer/SKILL.md` → `SOURCE_CODE` paths read-only → for `FEATURE_REF`, `{FEATURE_REF_PATH}/README.md`, `{FEATURE_REF_PATH}/PRD.md`, and `{FEATURE_REF_PATH}/feature-assembly-plan.md` read-only.
 
 Don't generate `{DOC_RUN_ID}` with `uuid4`. Don't write into any feature evidence package (`{PRODUCT_ROOT}/planning-mds/operations/evidence/F####-*/`). Don't cite documentation as a substitute for required feature evidence reports such as `test-execution-report.md` or `code-review-report.md`. Don't execute compile/lint/runtime commands outside runtime containers. Don't skip the SELF-REVIEW or APPROVAL gates from `agents/actions/document.md`.
 

@@ -1,6 +1,18 @@
-Before starting, resolve `{PRODUCT_ROOT}` per `agents/docs/AGENT-USE.md` → Session Setup and echo its absolute path on your first turn; every command below assumes that resolution.
+REQUIRED INPUTS (you must set):
+- `FEATURE_ID={F####}`
+- `MODE={greenfield | refinement | drift-reconcile}`
 
-Run `agents/actions/plan.md` for `{FEATURE_ID}` at `{PRODUCT_ROOT}/planning-mds/features/{F####-slug}` in `{greenfield | refinement | drift-reconcile}` mode with `RUN_ID={uuid4 generated at session start}`.
+OPTIONAL INPUTS (defaults apply when omitted):
+- `PRODUCT_ROOT=` — default: sister-repo per `agents/docs/AGENT-USE.md` → Session Setup; override only for non-standard layouts
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+- `FEATURE_SLUG` — kebab-case slug for `{FEATURE_ID}` from `REGISTRY.md`
+- `FEATURE_PATH` — `{PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}`
+- `RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start (8-char hex suffix from cryptographic randomness)
+
+Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command; every command below assumes that resolution.
+
+Run `agents/actions/plan.md` for `{FEATURE_ID}` at `{FEATURE_PATH}`.
 
 Use these tier defaults exactly:
 - `greenfield: file-centric, 2`

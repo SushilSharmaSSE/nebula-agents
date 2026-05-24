@@ -1,10 +1,24 @@
-Before starting, resolve `{PRODUCT_ROOT}` per `agents/docs/AGENT-USE.md` → Session Setup and echo its absolute path on your first turn. This prompt encodes the validate action under `feature-evidence-package-standardization-plan-v2.md` (effective `2026-05-19`). Validate is a parallel-agent validation action: Product Manager reviews requirements, Architect reviews architecture, and (when scope includes implementation) either agent invokes the framework validators (`validate-feature-evidence.py`, `validate-trackers.py`, `kg/validate.py`, `generate-story-index.py`, `validate_templates.py`) as tools. It produces a base run evidence package per §8 with per-agent validation reports; it does NOT write into any feature evidence package.
+This prompt encodes the validate action under `feature-evidence-package-standardization-plan-v2.md` (effective `2026-05-19`). Validate is a parallel-agent validation action: Product Manager reviews requirements, Architect reviews architecture, and (when scope includes implementation) either agent invokes the framework validators (`validate-feature-evidence.py`, `validate-trackers.py`, `kg/validate.py`, `generate-story-index.py`, `validate_templates.py`) as tools. It produces a base run evidence package per §8 with per-agent validation reports; it does NOT write into any feature evidence package.
 
-Generate `{VALIDATE_RUN_ID}` once at session start using the contract format `YYYY-MM-DD-[a-z0-9]{8}` (suffix from `python3 -c "import secrets; print(secrets.token_hex(4))"`). Do not use `uuid4`.
+REQUIRED INPUTS (you must set):
+- `VALIDATION_SCOPE={requirements | architecture | implementation | all}`
 
-Create `VALIDATE_RUN_FOLDER` at `{PRODUCT_ROOT}/planning-mds/operations/evidence/{VALIDATE_RUN_ID}/` and initialize the six §8 base run files from templates. Create the `artifacts/` subfolder for JSON output capture.
+OPTIONAL INPUTS (defaults apply when omitted):
+- `FEATURE_ID={F####}` — narrows implementation validation to a single feature
+- `STAGE={G0|G1|G2|G3|G4.5|G4.6|G4.7|closeout}` — default: `closeout`; only meaningful when `FEATURE_ID` is set
+- `RUN_ID={parent feature run ID}` — required when `STAGE` is `G0..G4.5`
+- `EFFECTIVE_DATE={YYYY-MM-DD}` — default: `2026-05-19` (framework default); earlier values rejected (`effective_date_override_earlier_than_default_fails`)
+- `PRODUCT_ROOT=` — default: sister-repo resolved per `agents/docs/AGENT-USE.md` → Session Setup; override only for non-standard layouts
 
-Run `agents/actions/validate.md` with `VALIDATION_SCOPE={requirements | architecture | implementation | all}` and (when implementation validation targets a specific feature) `FEATURE_ID={F####}`, optional `RUN_ID={parent feature run ID}` (required for stages G0..G4.5), and `STAGE` defaulting to `closeout`. `EFFECTIVE_DATE` defaults to `2026-05-19` and is rejected if earlier than the framework default (`effective_date_override_earlier_than_default_fails`).
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+- `VALIDATE_RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start
+- `VALIDATE_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{VALIDATE_RUN_ID}`
+- `FEATURE_SLUG` — kebab-case slug for `{FEATURE_ID}` from `REGISTRY.md` (only when `FEATURE_ID` is set)
+- `EVIDENCE_ROOT` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}` (only when `FEATURE_ID` is set)
+
+Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command. Create `{VALIDATE_RUN_FOLDER}` and initialize the six §8 base run files from templates. Create the `artifacts/` subfolder for JSON output capture.
+
+Run `agents/actions/validate.md` with the inputs above.
 
 Load context in this order: `agents/ROUTER.md` → `agents/agent-map.yaml` → `agents/docs/AGENT-USE.md` → `agents/actions/validate.md` → `agents/product-manager/SKILL.md` (requirements validation mode) → `agents/architect/SKILL.md` (architecture validation mode). When implementation is in scope, also load `agents/product-manager/scripts/README.md` for validator commands and exit codes.
 

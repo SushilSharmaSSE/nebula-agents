@@ -1,12 +1,25 @@
-Before starting, resolve `{PRODUCT_ROOT}` per `agents/docs/AGENT-USE.md` → Session Setup (operator input, `NEBULA_PRODUCT_ROOT` env var, or default `../<product-repo>`) and echo its absolute path on your first turn. This prompt encodes the init action under `feature-evidence-package-standardization-plan-v2.md` (effective `2026-05-19`). Init bootstraps a brand-new product — there are no features yet, so no feature evidence package exists. Init still produces a base run evidence package per §8 so the bootstrap itself is auditable.
+This prompt encodes the init action under `feature-evidence-package-standardization-plan-v2.md` (effective `2026-05-19`). Init bootstraps a brand-new product — there are no features yet, so no feature evidence package exists. Init still produces a base run evidence package per §8 so the bootstrap itself is auditable.
 
-Confirm `{PRODUCT_ROOT}` is empty or a new repository willing to accept scaffolded files. If it's non-empty, do not proceed without explicit operator confirmation.
+REQUIRED INPUTS (you must set):
+- `PROJECT_NAME={string}`
+- `DOMAIN_DESCRIPTION={1-2 sentence summary}`
+- `TARGET_USERS=[{role}, {role}, ...]`
+- `CORE_ENTITIES=[{entity}, {entity}, ...]`
+
+OPTIONAL INPUTS (defaults apply when omitted):
+- `PRODUCT_ROOT=` — default: `NEBULA_PRODUCT_ROOT` env var, or sister-repo `../<product-repo>` per `agents/docs/AGENT-USE.md` → Session Setup
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+- `INIT_RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start
+- `INIT_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{INIT_RUN_ID}` (created once `operations/evidence/` has been scaffolded by gate I4)
+
+Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command. Confirm `{PRODUCT_ROOT}` is empty or a new repository willing to accept scaffolded files. If it's non-empty, do not proceed without explicit operator confirmation.
 
 Generate `{INIT_RUN_ID}` once at session start using the contract format `YYYY-MM-DD-[a-z0-9]{8}` (suffix from `python3 -c "import secrets; print(secrets.token_hex(4))"`). Do not use `uuid4`.
 
-Create `INIT_RUN_FOLDER` at `{PRODUCT_ROOT}/planning-mds/operations/evidence/{INIT_RUN_ID}/` (created once `operations/evidence/` has been scaffolded by gate I4). Initialize the six §8 base run files from templates.
+Create `INIT_RUN_FOLDER` at `{INIT_RUN_FOLDER}/` (created once `operations/evidence/` has been scaffolded by gate I4). Initialize the six §8 base run files from templates.
 
-Run `agents/actions/init.md` with `PROJECT_NAME`, `DOMAIN_DESCRIPTION` (1-2 sentences), `TARGET_USERS` (list of roles), and `CORE_ENTITIES` (initial baseline list). Start only when `nebula-agents` is checked out, `{PRODUCT_ROOT}` is resolved and accepting scaffold, and the operator has basic project context.
+Run `agents/actions/init.md` with `PROJECT_NAME`, `DOMAIN_DESCRIPTION`, `TARGET_USERS`, and `CORE_ENTITIES`. Start only when `nebula-agents` is checked out, `{PRODUCT_ROOT}` is resolved and accepting scaffold, and the operator has basic project context.
 
 Load context in this order: `agents/ROUTER.md` → `agents/agent-map.yaml` → `agents/docs/AGENT-USE.md` → `agents/actions/init.md` → `agents/product-manager/SKILL.md` (initialization mode) → `agents/templates/**` for scaffolded file templates.
 

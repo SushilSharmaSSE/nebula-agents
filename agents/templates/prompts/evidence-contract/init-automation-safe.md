@@ -2,6 +2,19 @@ ACTION: agents/actions/init.md
 CONTRACT: feature-evidence-package-standardization-plan-v2.md (effective 2026-05-19)
 CONTRACT SCOPE: Init bootstraps a new product. It runs BEFORE any feature exists, so there is no feature evidence package to produce. Init still produces a base run evidence package per §8 so the bootstrap itself is auditable.
 
+REQUIRED INPUTS (operator must set before SESSION_SETUP):
+  PROJECT_NAME:         {string}
+  DOMAIN_DESCRIPTION:   {1-2 sentence summary}
+  TARGET_USERS:         [{role}, {role}, ...]
+  CORE_ENTITIES:        [{entity}, {entity}, ...]
+
+OPTIONAL INPUTS (defaults apply when omitted):
+  PRODUCT_ROOT:         absolute product repo root             # default: NEBULA_PRODUCT_ROOT env var, or sister-repo `../<product-repo>` per agents/docs/AGENT-USE.md
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+  INIT_RUN_ID           = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
+  INIT_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/{INIT_RUN_ID}
+
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup (operator input, NEBULA_PRODUCT_ROOT env var, or default `../<product-repo>`)
 - Echo resolved absolute {PRODUCT_ROOT}
@@ -11,13 +24,6 @@ SESSION_SETUP:
     INIT_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{INIT_RUN_ID}/
     mkdir -p {INIT_RUN_FOLDER}
 - Initialize base run files: README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log (empty JSONL), lifecycle-gates.log (empty)
-
-PARAMETERS:
-  PROJECT_NAME:        {string}
-  DOMAIN_DESCRIPTION:  {1-2 sentence summary}
-  TARGET_USERS:        [{role}, {role}, ...]
-  CORE_ENTITIES:       [{entity}, {entity}, ...]
-  INIT_RUN_ID:         {YYYY-MM-DD-[a-z0-9]{8}; generated per SESSION_SETUP}
 
 PRECONDITIONS:
 - nebula-agents is checked out and is the current session working directory

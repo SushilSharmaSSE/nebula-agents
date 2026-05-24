@@ -25,7 +25,7 @@ Security
   ↓
 [PRODUCT MANAGER CLOSEOUT: delivered-feature reconciliation]
   ↓
-[TRACKER SYNC GATE: trackers and story index validated]
+[BUILD TRACKER SYNC: trackers and story index validated]
   ↓
 Build Complete
 ```
@@ -45,12 +45,14 @@ Build Complete
 When this build action archives a delivered feature at closeout, it produces the §10 canonical feature evidence package at:
 
 ```text
-{PRODUCT_ROOT}/planning-mds/operations/evidence/F####-{slug}/{RUN_ID}/
+{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}/{RUN_ID}/
 ```
+
+For each `FEATURE_ID` in `BUILD_SCOPE`, `FEATURE_SLUG` and the per-feature `RUN_ID` are resolved by the build orchestrator per `evidence-contract/build-automation-safe.md`.
 
 The package contents match those produced by `agents/actions/feature.md` (see its "Canonical Evidence Package" section). The same §17 step 4 supersession-and-publish sequence applies at closeout:
 
-1. Invoke `agents/product-manager/scripts/patch-prior-manifest.py --feature F#### --new-run-id {RUN_ID}` to mark every prior approved manifest as `superseded`.
+1. Invoke `agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}` to mark every prior approved manifest as `superseded`.
 2. Only after step 1 succeeds, write the new `latest-run.json` for this feature.
 
 If step 1 fails, do not proceed to step 2; surface the failure with the operator runbook reference (`feature-evidence-package-standardization-plan-v2.md` §28 Phase 5 "Partial-closeout recovery"). Build-action runs that do not archive a delivered feature use the §8 base run evidence shape only.
@@ -61,9 +63,9 @@ When this action drives feature closeout, run `validate-feature-evidence.py` at 
 
 | Gate | Command |
 |------|---------|
-| G0–G4.5 | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage <G0\|G1\|G2\|G3\|G4.5>` |
-| G4.6 candidate | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage G4.6` (before tracker sync; before `pm-closeout.md` is finalized) |
-| Closeout (G4.7) | After §17 step 4 supersession-and-publish completes: `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --stage closeout` |
+| G0–G4.5 | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage <G0\|G1\|G2\|G3\|G4.5>` |
+| G4.6 candidate | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage G4.6` (before tracker sync; before `pm-closeout.md` is finalized) |
+| Closeout (G4.7) | After §17 step 4 supersession-and-publish completes: `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --stage closeout` |
 
 Stage-validation failures must be resolved before advancing the gate.
 
@@ -1006,7 +1008,9 @@ Before Build Complete, verify required role signoffs across delivered features:
 
 ---
 
-### Step 6.95: TRACKER SYNC GATE (Mandatory)
+### Step 6.95: Build Tracker Sync (Mandatory)
+
+> Build-internal step name. Not to be confused with the feature-evidence gates from §17 — under v2 the feature `G4.6` carries candidate evidence + tracker validation and `G4.7` is PM closeout. This step coordinates tracker validation across the whole build.
 
 **Execution Instructions:**
 

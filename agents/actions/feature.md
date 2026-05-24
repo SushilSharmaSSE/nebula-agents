@@ -92,7 +92,7 @@ Load in this order when the work is feature-scoped:
 - Editing shared semantics without prior `blast.py <node-id>`
 - Continuing after a runtime-blocked failure without re-running runtime preflight
 - Skipping any gate from `G0` through `G4.7`
-- Declaring done without the explicit Product Manager role switch at `G4.6`
+- Declaring done without the explicit Product Manager role switch at `G4.7`
 - Widening scope outside the current feature
 - Climbing past `max_auto_tier` without recording `workstate.py escalate`
 
@@ -104,8 +104,8 @@ Load in this order when the work is feature-scoped:
 - `G3 CODE + SECURITY REVIEW` — Step 3 Parallel Reviews
 - `G4 APPROVAL` — Step 4 Feature Review
 - `G4.5 SIGNOFF` — Step 4.5 Required reviewer evidence verification
-- `G4.6 PM CLOSEOUT` — Step 4.6 Product Manager closeout and archive reconciliation
-- `G4.7 TRACKER SYNC` — Step 4.7 Final tracker validation
+- `G4.6 CANDIDATE EVIDENCE VALIDATION` — Step 4.6 pre-closeout evidence validation and tracker sync
+- `G4.7 PM CLOSEOUT` — Step 4.7 Product Manager closeout, supersession, and final validation
 
 ## Canonical Evidence Package
 
@@ -145,7 +145,7 @@ Run-ID format: `YYYY-MM-DD-XXXXXXXX` per §11 — date is local-at-session-start
 
 When this action writes a new `latest-run.json` at G4.7/closeout, perform exactly this order:
 
-1. Invoke `agents/product-manager/scripts/patch-prior-manifest.py --feature F#### --new-run-id {RUN_ID}` to mark every prior approved manifest for this feature as `superseded`. The helper is idempotent and exits 0 with no priors.
+1. Invoke `agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}` to mark every prior approved manifest for this feature as `superseded`. The helper is idempotent and exits 0 with no priors.
 2. Only after step 1 succeeds, write `latest-run.json` pointing at the new run.
 
 If step 1 fails, do not proceed to step 2. Surface the failure with the operator runbook reference (`feature-evidence-package-standardization-plan-v2.md` §28 Phase 5 "Partial-closeout recovery"). Validator catch-rule `two_approved_runs_without_supersession_fails` enforces the invariant as defense in depth.
@@ -156,13 +156,13 @@ Run `validate-feature-evidence.py` after producing each gate's artifacts so miss
 
 | Gate | Command | Stage |
 |------|---------|-------|
-| G0   | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage G0` | `G0` |
-| G1   | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage G1` | `G1` |
-| G2   | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage G2` | `G2` |
-| G3   | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage G3` | `G3` |
-| G4.5 | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage G4.5` | `G4.5` |
-| G4.6 | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage G4.6` | `G4.6` candidate validation; runs **before** tracker sync per §17 step 1-2 |
-| G4.7 | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --stage closeout` | After §17 step 4 completes — `latest-run.json` and `pm-closeout.md` must exist; tracker results must be in `lifecycle-gates.log` |
+| G0   | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage G0` | `G0` |
+| G1   | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage G1` | `G1` |
+| G2   | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage G2` | `G2` |
+| G3   | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage G3` | `G3` |
+| G4.5 | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage G4.5` | `G4.5` |
+| G4.6 | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage G4.6` | `G4.6` candidate validation; runs **before** tracker sync per §17 step 1-2 |
+| G4.7 | `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --stage closeout` | After §17 step 4 completes — `latest-run.json` and `pm-closeout.md` must exist; tracker results must be in `lifecycle-gates.log` |
 
 Stage-validation failures must be repaired before advancing the gate. Do not skip stage validation even when the missing artifact "will land later" — §17's stage matrix declares exactly which artifacts must exist by stage.
 
@@ -181,9 +181,9 @@ Stage-validation failures must be repaired before advancing the gate. Do not ski
 Run in this order:
 
 1. Applicable backend / frontend / AI / QE runtime commands for changed surfaces, with evidence paths recorded under `{PRODUCT_ROOT}/planning-mds/operations/evidence/**`
-2. `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --run-id {RUN_ID} --stage G4.6` (candidate validation before tracker sync per §17 step 1)
+2. `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --run-id {RUN_ID} --stage G4.6` (candidate validation before tracker sync per §17 step 1)
 3. `python3 agents/product-manager/scripts/validate-trackers.py` (calls feature-evidence at `--stage G4.6` per §22; appends tracker results to `lifecycle-gates.log`)
-4. After §17 step 4 completes (`patch-prior-manifest.py` then `latest-run.json`): `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature F#### --stage closeout`
+4. After §17 step 4 completes (`patch-prior-manifest.py` then `latest-run.json`): `python3 agents/product-manager/scripts/validate-feature-evidence.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --stage closeout`
 5. `python3 agents/product-manager/scripts/generate-story-index.py {PRODUCT_ROOT}/planning-mds/features/` when stories changed
 6. `python3 {PRODUCT_ROOT}/scripts/kg/validate.py --regenerate-symbols` when code in bound files changed
 7. `python3 {PRODUCT_ROOT}/scripts/kg/validate.py --write-coverage-report` when KG changed

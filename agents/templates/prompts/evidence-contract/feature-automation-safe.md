@@ -1,6 +1,27 @@
 ACTION: agents/actions/feature.md
 CONTRACT: feature-evidence-package-standardization-plan-v2.md (effective 2026-05-19)
 
+REQUIRED INPUTS (operator must set before SESSION_SETUP):
+  FEATURE_ID:           {F####}
+
+OPTIONAL INPUTS (defaults apply when omitted):
+  MODE:                 {clean | drift-reconcile}             # default: clean
+  SLICE_ORDER_SOURCE:   {assembly-plan | override}            # default: assembly-plan
+  SLICE_ORDER:          # only when SLICE_ORDER_SOURCE=override; brackets = parallel within entry
+                        #   - {F####-S####}
+                        #   - [{F####-S####}, {F####-S####}]
+  PRODUCT_ROOT:         absolute product repo root            # default: sister-repo per agents/docs/AGENT-USE.md
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+  FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md
+  FEATURE_PATH          = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}
+  ARCHIVE_FEATURE_PATH  = {PRODUCT_ROOT}/planning-mds/features/archive/{FEATURE_ID}-{FEATURE_SLUG}
+  EVIDENCE_ROOT         = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}
+  RUN_ID                = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP (e.g. 2026-05-19-5ab6f922)
+  RUN_FOLDER            = {EVIDENCE_ROOT}/{RUN_ID}
+  RUN_ID_PRIOR          = prior approved run_id read from {EVIDENCE_ROOT}/latest-run.json (null if absent)
+  RERUN_OF              = null | {RUN_ID_PRIOR} when this run regenerates evidence only
+
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
 - Echo the resolved absolute {PRODUCT_ROOT} path on the first turn before any shell command
@@ -10,11 +31,9 @@ SESSION_SETUP:
     RUN_ID = {date}-{suffix}                  # example: 2026-05-19-5ab6f922
   DO NOT use uuid4. DO NOT regenerate {RUN_ID} after the session starts.
 - Create the evidence root and run folder:
-    EVIDENCE_ROOT = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{slug}
-    RUN_FOLDER    = {EVIDENCE_ROOT}/{RUN_ID}
     mkdir -p {RUN_FOLDER}/artifacts/{coverage,diffs,test-results,security,screenshots}
 - Initialize {RUN_FOLDER}/evidence-manifest.json from agents/templates/evidence-manifest-template.json with:
-    schema_version=1, feature_id={FEATURE_ID}, feature_slug={slug}, run_id={RUN_ID},
+    schema_version=1, feature_id={FEATURE_ID}, feature_slug={FEATURE_SLUG}, run_id={RUN_ID},
     status="draft", recorded_on={today}, contract_effective_date=2026-05-19,
     feature_path_at_run_start={FEATURE_PATH}, feature_path_at_closeout=null,
     feature_state="In Progress", rerun_of=null,
@@ -28,19 +47,7 @@ SESSION_SETUP:
 - Concurrent-run check: scan {EVIDENCE_ROOT}/ for any run folder OTHER than {RUN_FOLDER} whose evidence-manifest.json carries status="draft" or status="in-progress". If one exists, HALT and reconcile externally before proceeding; the v2 contract assumes serial feature actions per feature (§17). Acceptable states for sibling runs: status="approved" with prior-run supersession handled at G4.7, status="superseded", or no sibling runs at all.
 - All paths and commands below assume the above resolution and run folder
 
-PARAMETERS:
-  FEATURE_ID:          {F####}
-  FEATURE_PATH:        {PRODUCT_ROOT}/planning-mds/features/{F####-slug}      # POSIX
-  MODE:                {clean | drift-reconcile}
-  SLICE_ORDER_SOURCE:  {assembly-plan | override}
-  # If override:
-  # SLICE_ORDER:
-  #   - {F####-S####}
-  #   - [{F####-S####}, {F####-S####}]   # brackets = parallel within entry
-  RUN_ID:              {YYYY-MM-DD-[a-z0-9]{8}; generated per SESSION_SETUP}
-  RERUN_OF:            {null | prior approved {RUN_ID}}   # set when this run regenerates evidence only
-
-TIER DEFAULTS (start_tier, max_auto_tier):
+TIER DEFAULTS (start_tier, max_auto_tier; selected by MODE):
   clean:            1, 2
   drift-reconcile:  3, 4
 
@@ -176,8 +183,8 @@ G4.7 PM CLOSEOUT (PM agent role switch is mandatory)
      - MUST read agents/product-manager/SKILL.md before executing (explicit role switch)
      - Write {RUN_FOLDER}/pm-closeout.md (Result: APPROVED|APPROVED WITH RECOMMENDATIONS|REJECTED)
      - Finalize {RUN_FOLDER}/evidence-manifest.json: status="approved", feature_state in {Done|Completed|Archived}, feature_path_at_closeout resolved, all gate_results present
-     - IF a prior approved manifest exists at {EVIDENCE_ROOT}/{RUN_ID_PRIOR}/evidence-manifest.json: patch its status to "superseded" (rule two_approved_runs_without_supersession_fails)
-     - Write {EVIDENCE_ROOT}/latest-run.json (schema per §12) pointing to {RUN_FOLDER}
+     - Run `python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}`; it is idempotent and patches all prior approved sibling manifests to `status="superseded"` (rule two_approved_runs_without_supersession_fails)
+     - Write {EVIDENCE_ROOT}/latest-run.json (schema per §12) pointing to {RUN_FOLDER} only after patch-prior-manifest.py exits 0
      - Final validation: `validate-feature-evidence.py --stage closeout` exit 0
        (no --run-id; resolves via latest-run.json)
 
@@ -195,7 +202,7 @@ G4.7 PM CLOSEOUT CHECKLIST (run after G4.6 + tracker sync):
 - Update {PRODUCT_ROOT}/planning-mds/features/REGISTRY.md: status/path transitions (include archive move; set Archived Date when archiving)
 - Update {PRODUCT_ROOT}/planning-mds/features/ROADMAP.md: Now/Next/Later/Completed placement
 - Update {PRODUCT_ROOT}/planning-mds/BLUEPRINT.md: feature/story status labels and links
-- IF overall_status in {Done|Completed}: move {FEATURE_PATH} to {PRODUCT_ROOT}/planning-mds/features/archive/{F####-slug}/ and fix impacted links
+- IF overall_status in {Done|Completed}: move {FEATURE_PATH} to {ARCHIVE_FEATURE_PATH}/ and fix impacted links
 - Update {PRODUCT_ROOT}/planning-mds/knowledge-graph/feature-mappings.yaml: feature path, status, story status
 - Update {PRODUCT_ROOT}/planning-mds/knowledge-graph/code-index.yaml: bindings for every new source file introduced by this feature
 - Update canonical-nodes.yaml ONLY if new shared semantics introduced (route to Architect if so)
@@ -204,8 +211,8 @@ G4.7 PM CLOSEOUT CHECKLIST (run after G4.6 + tracker sync):
 - `python3 {PRODUCT_ROOT}/scripts/kg/validate.py --check-drift` MUST exit 0
 - Write pm-closeout.md (Final Story Status, Archive Decision, Deferred Follow-ups, Recommendation Acceptances, Tracker Updates, Validator Results)
 - Finalize evidence-manifest.json (status="approved")
-- IF {RUN_ID_PRIOR} captured at SESSION_SETUP: patch {EVIDENCE_ROOT}/{RUN_ID_PRIOR}/evidence-manifest.json to status="superseded"
-- Write {EVIDENCE_ROOT}/latest-run.json (schema_version=1, feature_id, run_id={RUN_ID}, run_path, manifest_path, status="approved", approved_on={today})
+- Run `python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}`; it is idempotent and patches all prior approved sibling manifests to `status="superseded"`
+- Write {EVIDENCE_ROOT}/latest-run.json (schema_version=1, feature_id, run_id={RUN_ID}, run_path, manifest_path, status="approved", approved_on={today}) only after patch-prior-manifest.py exits 0
 - Run final `validate-feature-evidence.py --stage closeout` and confirm exit 0
 
 VALIDATOR-DEFECT FALLBACK (only if a validator defect blocks closeout):

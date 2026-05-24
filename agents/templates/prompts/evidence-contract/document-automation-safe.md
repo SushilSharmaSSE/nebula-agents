@@ -2,6 +2,21 @@ ACTION: agents/actions/document.md
 CONTRACT: feature-evidence-package-standardization-plan-v2.md (effective 2026-05-19)
 CONTRACT SCOPE: Document produces technical documentation (API docs, READMEs, runbooks, developer guides). It is OUTSIDE the feature evidence contract — it does NOT produce role reports for any feature evidence package and does NOT need to be cited as evidence for a completed terminal feature. It still produces a base run evidence package per §8 so the documentation run is auditable.
 
+REQUIRED INPUTS (operator must set before SESSION_SETUP):
+  DOC_SCOPE:            {api | readme | runbook | developer-guide | release-notes | mixed}
+  TARGETS:              [{path}, {path}, ...]                  # destination doc files
+
+OPTIONAL INPUTS (defaults apply when omitted):
+  SOURCE_CODE:          [{path}, {path}, ...]                  # source code basis for the docs (default: derived from TARGETS)
+  FEATURE_REF:          {F####}                                # optional reference for context; does NOT make this a feature-scoped run
+  PRODUCT_ROOT:         absolute product repo root             # default: sister-repo per agents/docs/AGENT-USE.md
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+  DOC_RUN_ID            = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
+  DOC_RUN_FOLDER        = {PRODUCT_ROOT}/planning-mds/operations/evidence/{DOC_RUN_ID}
+  FEATURE_REF_SLUG      = kebab-case slug for {FEATURE_REF} from REGISTRY.md (only when FEATURE_REF is set)
+  FEATURE_REF_PATH      = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_REF}-{FEATURE_REF_SLUG} (only when FEATURE_REF is set)
+
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
 - Echo resolved absolute {PRODUCT_ROOT}
@@ -10,13 +25,6 @@ SESSION_SETUP:
     DOC_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{DOC_RUN_ID}/
     mkdir -p {DOC_RUN_FOLDER}
 - Initialize base run files from templates: README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log, lifecycle-gates.log
-
-PARAMETERS:
-  DOC_RUN_ID:     {YYYY-MM-DD-[a-z0-9]{8}; generated per SESSION_SETUP}
-  DOC_SCOPE:      {api | readme | runbook | developer-guide | release-notes | mixed}
-  TARGETS:        [{path}, {path}, ...]                            # destination doc files
-  SOURCE_CODE:    [{path}, {path}, ...]                            # source code basis for the docs (optional)
-  FEATURE_REF:    {F####}                                          # optional reference for context; does NOT make this a feature-scoped run
 
 PRECONDITIONS:
 - {DOC_RUN_FOLDER} created with base run files
@@ -29,7 +37,7 @@ CONTEXT LOADING ORDER:
 4. agents/actions/document.md
 5. agents/technical-writer/SKILL.md
 6. SOURCE_CODE paths (read-only)
-7. For FEATURE_REF: {FEATURE_PATH}/README.md, PRD.md, feature-assembly-plan.md (read-only context)
+7. For FEATURE_REF: {FEATURE_REF_PATH}/README.md, PRD.md, feature-assembly-plan.md (read-only context)
 
 FORBIDDEN:
 - Generating {DOC_RUN_ID} with uuid4

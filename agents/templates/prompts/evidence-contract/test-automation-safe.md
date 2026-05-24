@@ -4,6 +4,27 @@ CONTRACT SCOPE: Test can run in two modes:
   (a) feature-scoped: writes test-plan.md, test-execution-report.md, coverage-report.md INTO an existing feature run folder; the parent feature action drives G2 and G4.5
   (b) standalone: writes QE reports under a base run evidence folder; does NOT produce a feature evidence package
 
+REQUIRED INPUTS (operator must set before SESSION_SETUP):
+  MODE:                 {feature-scoped | standalone}
+  TEST_SCOPE:           {unit | component | integration | e2e | api | accessibility | regression | all}
+  # When MODE=feature-scoped, also REQUIRED:
+  FEATURE_ID:           {F####}                                # required when MODE=feature-scoped
+  RUN_ID:               {YYYY-MM-DD-[a-z0-9]{8}}               # required when MODE=feature-scoped; the parent feature run ID
+
+OPTIONAL INPUTS (defaults apply when omitted):
+  STORIES:              [{F####-S####}, ...]                   # story IDs covered (only when MODE=feature-scoped); default: all stories in the feature breakdown
+  PRODUCT_ROOT:         absolute product repo root             # default: sister-repo per agents/docs/AGENT-USE.md
+
+AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
+  FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md (only when MODE=feature-scoped)
+  FEATURE_PATH          = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG} (only when MODE=feature-scoped)
+  OUTPUT_FOLDER         = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}/{RUN_ID} (only when MODE=feature-scoped)
+  ARTIFACTS_FOLDER      = {OUTPUT_FOLDER}/artifacts/test-results (only when MODE=feature-scoped)
+  COVERAGE_FOLDER       = {OUTPUT_FOLDER}/artifacts/coverage (only when MODE=feature-scoped)
+  SCREENSHOTS_FOLDER    = {OUTPUT_FOLDER}/artifacts/screenshots (only when MODE=feature-scoped)
+  TEST_RUN_ID           = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP (only when MODE=standalone)
+  TEST_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/{TEST_RUN_ID} (only when MODE=standalone)
+
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
 - Echo resolved absolute {PRODUCT_ROOT}
@@ -11,7 +32,7 @@ SESSION_SETUP:
 - Generate {TEST_RUN_ID} once at session start using contract format YYYY-MM-DD-[a-z0-9]{8} (suffix from `secrets.token_hex(4)`). DO NOT use uuid4.
 - For MODE=feature-scoped:
     REQUIRED PARAM: FEATURE_ID, RUN_ID (parent feature run ID)
-    OUTPUT_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{slug}/{RUN_ID}/
+    OUTPUT_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}/{RUN_ID}/
     DO NOT create a new run folder; OUTPUT_FOLDER must already exist
     ARTIFACTS_FOLDER   = {OUTPUT_FOLDER}/artifacts/test-results/    (raw test output)
     COVERAGE_FOLDER    = {OUTPUT_FOLDER}/artifacts/coverage/        (raw coverage output)
@@ -20,14 +41,6 @@ SESSION_SETUP:
     TEST_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{TEST_RUN_ID}/
     mkdir -p {TEST_RUN_FOLDER}/artifacts/{test-results,coverage}
     Initialize base run files per §8
-
-PARAMETERS:
-  MODE:           {feature-scoped | standalone}
-  FEATURE_ID:     {F####}                                          # required when MODE=feature-scoped
-  RUN_ID:         {YYYY-MM-DD-[a-z0-9]{8}}                         # parent feature run ID
-  TEST_RUN_ID:    {YYYY-MM-DD-[a-z0-9]{8}}                         # this test run's ID; only when MODE=standalone
-  TEST_SCOPE:     {unit | component | integration | e2e | api | accessibility | regression | all}
-  STORIES:        [{F####-S####}, ...]                             # for feature-scoped, the story IDs covered
 
 PRECONDITIONS:
 - For MODE=feature-scoped: feature run folder exists; G1 has passed; coverage-report.md format known per §14
@@ -46,7 +59,7 @@ CONTEXT LOADING ORDER:
 FORBIDDEN:
 - Generating run IDs with uuid4
 - Writing QE reports outside {OUTPUT_FOLDER} or {TEST_RUN_FOLDER}
-- For feature-scoped: creating a new {FEATURE_ID}-{slug} run folder during test
+- For feature-scoped: creating a new run folder during test instead of using existing {OUTPUT_FOLDER}
 - Skipping coverage-report.md entirely — the file must exist even when coverage is waived (§10)
 - Mocking runtime layers in integration/E2E tests when raw runtime is available
 - Citing summary prose alone as evidence for a passing gate; artifact paths are required
