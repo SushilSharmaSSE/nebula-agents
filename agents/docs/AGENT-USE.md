@@ -212,13 +212,18 @@ Execution notes:
 
 ## Action Prompt Templates
 
-Use the prompt templates in `agents/templates/prompts/` as the canonical
-operator starting points for `plan` and `feature` action sessions:
+Use the prompt templates in `agents/templates/prompts/` as canonical operator
+starting points for action sessions. The evidence-contract variants are the
+preferred prompts when the action must produce or review formal evidence.
 
 - `agents/templates/prompts/plan-automation-safe.md`
 - `agents/templates/prompts/plan-operator-friendly.md`
 - `agents/templates/prompts/feature-automation-safe.md`
 - `agents/templates/prompts/feature-operator-friendly.md`
+- `agents/templates/prompts/evidence-contract/plan-review-automation-safe.md`
+- `agents/templates/prompts/evidence-contract/plan-review-operator-friendly.md`
+- `agents/templates/prompts/evidence-contract/feature-review-automation-safe.md`
+- `agents/templates/prompts/evidence-contract/feature-review-operator-friendly.md`
 
 These templates encode the current retrieval budget, gate IDs, required tool
 invocations, and exit-validation order. Keep them aligned with the action docs
@@ -400,8 +405,10 @@ When done:
 |--------|----------|----------|----------------|
 | `init` | starting a new repo or bootstrapping framework files | Product Manager | `Run the init action defined in agents/actions/init.md for this repository.` |
 | `plan` | moving from idea to approved product and architecture specs | Product Manager -> Architect | `Run the plan action defined in agents/actions/plan.md for <feature or project>.` |
+| `plan-review` | independently checking whether completed planning is ready to build | Product Manager + Architect + Code Reviewer | `Run the plan-review action defined in agents/actions/plan-review.md for <feature or project>.` |
 | `build` | implementing a larger approved scope across the stack | Architect -> implementation agents -> reviews | `Run the build action defined in agents/actions/build.md for the approved scope in <feature folders>.` |
 | `feature` | shipping one vertical slice end to end | Architect -> implementation agents -> parallel reviews | `Run the feature action defined in agents/actions/feature.md for <feature folder>.` |
+| `feature-review` | independently checking whether a completed feature is truly done | PM + Architect + QE + Code Reviewer + Security (+ DevOps when needed) | `Run the feature-review action defined in agents/actions/feature-review.md for <feature folder>.` |
 | `review` | getting code-quality and security review on changed work | Code Reviewer + Security | `Run the review action defined in agents/actions/review.md for the current diff and affected feature folders.` |
 | `validate` | checking planning, architecture, and implementation alignment | Product Manager + Architect | `Run the validate action defined in agents/actions/validate.md for <feature or repo scope>.` |
 | `test` | expanding or executing automated test coverage | Quality Engineer | `Run the test action defined in agents/actions/test.md for <feature or changed components>.` |

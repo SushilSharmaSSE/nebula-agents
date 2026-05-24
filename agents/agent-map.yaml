@@ -201,12 +201,14 @@ agents:
 # Step types:
 #   agent:    single agent execution
 #   parallel: concurrent agents (array)
-#   gate:     approval | self-review | quality | editorial | tracker-sync | ontology-sync | signoff
+#   gate:     approval | self-review | quality | readiness | done-review | editorial | tracker-sync | ontology-sync | signoff
 #
 # Gate behaviors:
 #   approval:      user decides (approve / fix / reject); critical findings block
 #   self-review:   each preceding agent validates own work
 #   quality:       pass-rate + coverage thresholds; failing tests block
+#   readiness:     post-plan decision on whether planning is ready for feature/build work
+#   done-review:   post-feature decision on whether completed feature evidence is truly done
 #   editorial:     user reviews content (blog/docs)
 #   tracker-sync:  planning trackers synchronized; validation script must pass
 #   ontology-sync: feature mapping aligned with shared solution ontology; references and ownership boundaries verified; MUST run `python3 {PRODUCT_ROOT}/scripts/kg/validate.py` and pass before closeout (coverage-report.yaml must be fresh — regenerate via `--write-coverage-report`)
@@ -242,6 +244,20 @@ actions:
         script: {PRODUCT_ROOT}/scripts/kg/validate.py
       - gate: approval
         name: phase-b-review
+
+  plan-review:
+    doc: agents/actions/plan-review.md
+    description: Independently review completed planning and decide whether it is ready to build
+    prerequisites: [plan action completed for target scope]
+    steps:
+      - parallel:
+          - product-manager
+          - architect
+          - code-reviewer
+      - gate: self-review
+        name: plan-review-report-quality
+      - gate: readiness
+        name: plan-build-readiness
 
   build:
     doc: agents/actions/build.md
@@ -301,6 +317,23 @@ actions:
         role: closeout
       - gate: tracker-sync
         name: feature-closeout-sync
+
+  feature-review:
+    doc: agents/actions/feature-review.md
+    description: Independently review a completed feature and decide whether it is truly done
+    prerequisites: [feature action reached G4.6 or G4.7, changed-file set available]
+    steps:
+      - parallel:
+          - product-manager
+          - architect
+          - quality-engineer
+          - code-reviewer
+          - security
+          - devops                  # conditional — runtime/deploy/CI changes or disputed deployability evidence
+      - gate: self-review
+        name: feature-review-report-quality
+      - gate: done-review
+        name: feature-done-review
 
   review:
     doc: agents/actions/review.md

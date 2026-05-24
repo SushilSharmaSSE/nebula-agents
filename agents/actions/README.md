@@ -29,11 +29,13 @@ An action is a **composition recipe** that:
 
 ### Planning Actions
 - **[plan](./plan.md)** - Complete planning flow (Phase A + B): requirements → architecture
+- **[plan-review](./plan-review.md)** - Independently answer whether a completed plan is ready to build
 - **[validate](./validate.md)** - Validate requirements, architecture, and implementation alignment
 
 ### Implementation Actions
 - **[build](./build.md)** - Full implementation flow: app code + AI code (if needed) + tests + deployment
 - **[feature](./feature.md)** - Single vertical slice end-to-end (including AI when in scope, with code + security reviews)
+- **[feature-review](./feature-review.md)** - Independently answer whether a completed feature is truly done
 
 ### Quality Actions
 - **[review](./review.md)** - Comprehensive review: code quality + security + standards
@@ -118,11 +120,13 @@ Phase A (Product Manager Mode)
 
 Phase B (Architect/Tech Lead Mode)
   └─ plan action     → Architect (Phase B portion)
+  └─ plan-review     → Product Manager + Architect + Code Reviewer
   └─ validate action → Architect
 
 Phase C (Implementation Mode)
   └─ build action    → Architect (orchestration) → (Backend Developer + Frontend Developer + AI Engineer* + DevOps + Quality Engineer)
   └─ feature action  → Architect (orchestration) → (Backend Developer + Frontend Developer + AI Engineer* + Quality Engineer + DevOps)
+  └─ feature-review  → Product Manager + Architect + Quality Engineer + Code Reviewer + Security (+ DevOps*)
   └─ review action   → Code Reviewer + Security
   └─ test action     → Quality Engineer
   └─ document action → Technical Writer
