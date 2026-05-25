@@ -193,6 +193,7 @@ results, the file map, and any omissions/waivers. Schema example lives in
 - **Change scope:** `changed_paths[]`, `scm.{base_ref, head_ref, diff_artifact}`.
 - **Scope booleans (below):** drive which evidence is required.
 - **Results:** `required_roles[]`, `gate_results{}`, `role_results{}`, `files{}`.
+- **Security scans:** `security_scans{}` — required when `security_sensitive_scope = true` (see *Security scan handoff* below).
 - **Escape hatches:** `omissions[]`, `waivers{}`.
 
 ### Scope booleans
@@ -212,6 +213,36 @@ A `false` boolean contradicted by a matching `changed_paths[]` entry fires
 `scope_boolean_false_with_changed_paths_fails`. Products may strengthen the
 path-class→boolean mapping (additively) in
 `planning-mds/operations/evidence/README.md` under `Path Class Extensions`.
+
+### Security scan handoff (QE → Security)
+
+Security scanning is a split responsibility, recorded once in
+`security_scans{}` so neither role can assume the other did it:
+
+- **QE is Responsible (R)** for *running* the four scan classes and publishing
+  raw output under `artifacts/security/`: `dependency` (e.g. `pnpm audit`,
+  `dotnet list package --vulnerable`), `secrets` (Gitleaks), `sast` (Semgrep —
+  zero-infra; SonarQube is release-cadence reporting, not this gate),
+  `dast` (OWASP ZAP). QE records each result in `security_scans{}`.
+- **Security is Accountable (A)** for *interpreting* those artifacts —
+  threat model, exploitability, severity — and owns the verdict in
+  `security-review-report.md`. A Security `PASS` is only defensible when every
+  scan class either ran with a resolvable artifact or carries a complete waiver.
+
+Each class is one of:
+
+```json
+"sast": {"ran": true,  "result": "clean",   "artifact": "artifacts/security/sast-semgrep.sarif", "waiver": null}
+"dast": {"ran": false, "result": "not_run", "artifact": null, "waiver": {"reason": "no running target", "owner": "DevOps", "approved_on": "2026-06-01"}}
+```
+
+When `security_sensitive_scope = true` **and** the run's
+`contract_effective_date >= 2026-05-25`, the validator requires all four
+classes to be backed-or-waived. A scanner that is unavailable is recorded as a
+waiver (never silently skipped). Rules: `security_scans_missing_fails`,
+`security_scan_class_missing_fails`, `security_scan_unbacked_fails` (claimed
+`ran` with no resolvable artifact), `security_scan_unwaived_skip_fails` (did not
+run, no complete waiver). Runs on earlier contract dates are exempt.
 
 ## Telemetry: the Command Log
 
@@ -332,6 +363,7 @@ filesystem timestamps or git history.
 | Coverage waiver | missing/below-target detail in a present `coverage-report.md` | a missing `coverage-report.md` file | `waivers.coverage` + PM Acceptance Line (`coverage`) |
 | Runtime-preflight omission | `runtime_bearing = false` only | `runtime_bearing = true` | manifest omission + deployability note |
 | Security-report omission | non-security-sensitive, Security not required | `security_sensitive_scope = true` | manifest omission + PM approval |
+| Security-scan waiver | a scan class that could not run (scanner unavailable, no DAST target) | a finding from a scan that *did* run | `security_scans.<class>.waiver` (reason, owner, approved_on) |
 | Deferred follow-up | non-blocking recommendations PM accepts | unresolved blockers, critical findings | role report disposition + `pm-closeout.md` |
 | Validator-defect waiver | a rule that can't be satisfied due to a known validator bug | rules whose violation is a real evidence gap | `waivers.validator_defect` + `Validator Defects` subsection naming each rule ID with owner + target date |
 

@@ -39,9 +39,20 @@ What events are emitted, where they're persisted, who can read them. Confirm no 
 
 How secrets are stored and accessed in dev / preview / prod. Confirm secrets are not committed.
 
-## Scan References (when available)
+## Scan Disposition
 
-Cite scan output paths or external URLs (dependency scan, container scan, SAST). Validator checks they resolve when committed.
+For a `security_sensitive_scope` feature, account for every scan class from the
+manifest `security_scans{}` block — `dependency`, `secrets`, `sast`, `dast`. For
+each: cite the `artifacts/security/` output path (validator checks it resolves)
+or state the waiver and reason. A scanner that did not run is disclosed here as a
+waiver, never silently omitted.
+
+| Class | Ran | Result / Finding summary | Artifact or waiver reason |
+|-------|-----|--------------------------|---------------------------|
+| dependency | | | |
+| secrets | | | |
+| sast | | | |
+| dast | | | |
 
 ## OWASP Top 10 Coverage
 

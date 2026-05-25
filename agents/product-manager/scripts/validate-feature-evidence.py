@@ -31,6 +31,12 @@ from typing import Any, Iterable
 
 
 DEFAULT_EFFECTIVE_DATE = date(2026, 5, 19)
+# Runs whose contract_effective_date is on/after this date must record a
+# complete `security_scans` block when security_sensitive_scope is true (QE
+# runs the scanners, Security owns the verdict). Earlier runs are exempt so
+# pre-existing/archived evidence packages stay valid.
+SECURITY_SCANS_EFFECTIVE_DATE = date(2026, 5, 25)
+REQUIRED_SECURITY_SCAN_CLASSES = ("dependency", "secrets", "sast", "dast")
 RUN_ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-[a-z0-9]{8}$")
 FEATURE_ID_RE = re.compile(r"^F\d{4}$")
 ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -1187,6 +1193,58 @@ def validate_manifest_deep(
                     **common,
                 )
 
+    # security_scans completeness (QE→Security handoff)
+    # QE is Responsible for running the four scan classes and publishing raw
+    # output under artifacts/security/; Security is Accountable for the verdict.
+    # A Security PASS is only defensible when every class either ran with a
+    # resolvable artifact or carries a complete in-line waiver. Gated on the
+    # run's own contract_effective_date so earlier packages stay valid.
+    manifest_effective = parse_iso_date(str(manifest.get("contract_effective_date", "")))
+    if (
+        manifest.get("security_sensitive_scope") is True
+        and manifest_effective is not None
+        and manifest_effective >= SECURITY_SCANS_EFFECTIVE_DATE
+    ):
+        scans = manifest.get("security_scans")
+        if not isinstance(scans, dict):
+            result.add_error(
+                "security_scans_missing_fails",
+                "security_sensitive_scope is true but manifest.security_scans is missing or not an object",
+                **common,
+            )
+        else:
+            for scan_class in REQUIRED_SECURITY_SCAN_CLASSES:
+                entry = scans.get(scan_class)
+                if not isinstance(entry, dict):
+                    result.add_error(
+                        "security_scan_class_missing_fails",
+                        f"security_scans is missing required scan class {scan_class!r}",
+                        **common,
+                    )
+                    continue
+                if entry.get("ran") is True:
+                    artifact = entry.get("artifact")
+                    if not isinstance(artifact, str) or not artifact:
+                        result.add_error(
+                            "security_scan_unbacked_fails",
+                            f"security_scans[{scan_class!r}] ran but declares no artifact path",
+                            **common,
+                        )
+                        continue
+                    absolute, traverses = _is_repo_relative(artifact)
+                    if absolute or traverses or not (manifest_path.parent / artifact).exists():
+                        result.add_error(
+                            "security_scan_unbacked_fails",
+                            f"security_scans[{scan_class!r}] artifact does not resolve under the run folder: {artifact!r}",
+                            **common,
+                        )
+                elif not _is_complete_scan_waiver(entry.get("waiver")):
+                    result.add_error(
+                        "security_scan_unwaived_skip_fails",
+                        f"security_scans[{scan_class!r}] did not run and lacks a complete waiver (reason, owner, approved_on)",
+                        **common,
+                    )
+
     # status / feature_state at closeout
     status = manifest.get("status")
     feature_state = (manifest.get("feature_state") or "").strip().casefold()
@@ -1220,6 +1278,17 @@ def validate_manifest_deep(
                 or closeout_path.startswith("planning-mds/features/archive/")
             ):
                 result.add_error("manifest_closeout_path_missing_fails", f"feature_path_at_closeout must live under planning-mds/features[/archive]: {closeout_path!r}", **common)
+
+
+def _is_complete_scan_waiver(waiver: Any) -> bool:
+    """A scan-class waiver must name reason, owner, and approved_on so a skipped
+    scanner is an auditable decision rather than a silent gap."""
+    if not isinstance(waiver, dict):
+        return False
+    return all(
+        isinstance(waiver.get(field), str) and waiver.get(field, "").strip()
+        for field in ("reason", "owner", "approved_on")
+    )
 
 
 def _load_pm_acceptances(pm_closeout_path: Path) -> list[PmAcceptance]:

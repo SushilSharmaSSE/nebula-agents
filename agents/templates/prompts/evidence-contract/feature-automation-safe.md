@@ -34,7 +34,7 @@ SESSION_SETUP:
     mkdir -p {RUN_FOLDER}/artifacts/{coverage,diffs,test-results,security,screenshots}
 - Initialize {RUN_FOLDER}/evidence-manifest.json from agents/templates/evidence-manifest-template.json with:
     schema_version=1, feature_id={FEATURE_ID}, feature_slug={FEATURE_SLUG}, run_id={RUN_ID},
-    status="draft", recorded_on={today}, contract_effective_date=2026-05-19,
+    status="draft", recorded_on={today}, contract_effective_date=2026-05-25,
     feature_path_at_run_start={FEATURE_PATH}, feature_path_at_closeout=null,
     feature_state="In Progress", rerun_of=null,
     changed_paths=[], scm={base_ref, head_ref, diff_artifact:"artifacts/diffs/changed-files.txt"},

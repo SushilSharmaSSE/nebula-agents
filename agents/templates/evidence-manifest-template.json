@@ -6,7 +6,7 @@
   "run_id": "YYYY-MM-DD-XXXXXXXX",
   "status": "draft",
   "recorded_on": "YYYY-MM-DD",
-  "contract_effective_date": "2026-05-19",
+  "contract_effective_date": "2026-05-25",
   "feature_path_at_run_start": "planning-mds/features/F####-{slug}",
   "feature_path_at_closeout": null,
   "feature_state": "In Progress",
@@ -44,6 +44,13 @@
     "assembly_plan_validation": "g0-assembly-plan-validation.md"
   },
   "role_results": {},
+  "security_scans": {
+    "_comment": "Required when security_sensitive_scope is true and contract_effective_date >= 2026-05-25. QE runs each class and publishes raw output under artifacts/security/; Security owns the verdict. Each class is either {\"ran\": true, \"result\": \"<clean|findings>\", \"artifact\": \"artifacts/security/<file>\", \"waiver\": null} or {\"ran\": false, \"result\": \"not_run\", \"artifact\": null, \"waiver\": {\"reason\": \"...\", \"owner\": \"...\", \"approved_on\": \"YYYY-MM-DD\"}}.",
+    "dependency": {},
+    "secrets": {},
+    "sast": {},
+    "dast": {}
+  },
   "omissions": [],
   "waivers": {},
   "global_evidence_refs": {}

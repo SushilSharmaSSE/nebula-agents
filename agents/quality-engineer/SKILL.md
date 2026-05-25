@@ -140,8 +140,25 @@ Your responsibility is to implement the **quality assurance layer** - tests that
 ### 5. Security Testing
 - Vulnerability scanning (Trivy - dependencies + containers)
 - Dynamic security testing (OWASP ZAP)
-- Static analysis (SonarQube Community)
+- Static analysis / SAST (Semgrep — zero-infra, per-feature gate)
 - Secrets scanning (Gitleaks)
+
+> **SAST = Semgrep for the per-feature gate.** Semgrep runs as a single CLI with
+> no server (`agents/security/scripts/run-sast-scan.sh`), so it fits the
+> `security_scans.sast` class. SonarQube Community is **not** the per-feature
+> SAST tool — it is a stateful server reserved for release-cadence quality
+> reporting (see the QE overlay note in `docker-compose.qe.yml`), run
+> deliberately, not on every feature.
+
+You are **Responsible** for *running* these scanners; Security is **Accountable**
+for interpreting the output and owning the verdict (see Security skill). For a
+`security_sensitive_scope` feature, run the four scan classes — `dependency`,
+`secrets`, `sast`, `dast` — via `agents/security/scripts/*.sh`, write raw output
+under `{RUN_ID}/artifacts/security/`, and record each in the manifest
+`security_scans{}` block: `{"ran": true, "result": "<clean|findings>", "artifact":
+"artifacts/security/<file>", "waiver": null}`. If a scanner is unavailable, set
+`ran: false` and attach a waiver (`reason`, `owner`, `approved_on`) rather than
+omitting the class — the validator (`security_scan_*` rules) fails a silent skip.
 
 ### 6. Performance Testing
 - Frontend performance (Lighthouse CI - Core Web Vitals)
@@ -225,7 +242,8 @@ Use `--file <repo-path>` to reverse-map an existing code file back into the onto
 **Security Testing:**
 - Trivy (vulnerability scanning)
 - OWASP ZAP (DAST)
-- SonarQube Community (SAST)
+- Semgrep (SAST, per-feature gate)
+- SonarQube Community (release-cadence quality reporting, not the per-feature SAST gate)
 - Gitleaks (secrets detection)
 
 **Contract Testing:**
@@ -434,8 +452,9 @@ For code examples of common test patterns (Testing Error Scenarios, Testing Asyn
 |------|------|---------|
 | **Vulnerabilities** | Trivy | `trivy fs .` |
 | **DAST** | OWASP ZAP | `docker run -t owasp/zap2docker-stable zap-baseline.py -t http://localhost` |
-| **SAST** | SonarQube Community | `dotnet sonarscanner begin && dotnet build && dotnet sonarscanner end` |
+| **SAST** (per-feature gate) | Semgrep | `sh agents/security/scripts/run-sast-scan.sh --path . --report-dir <RUN>/artifacts/security` |
 | **Secrets** | Gitleaks | `gitleaks detect --source .` |
+| **Quality reporting** (release cadence) | SonarQube Community | `dotnet sonarscanner begin && dotnet build && dotnet sonarscanner end` (needs the `docker-compose.qe.yml` overlay up; not part of the per-feature `security_scans` gate) |
 
 ## Troubleshooting
 

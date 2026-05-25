@@ -381,6 +381,7 @@ Mandatory preflight before implementation validation runs:
    - Validate feature acceptance criteria coverage
    - Generate coverage report for feature code
    - When host browser dependencies block Playwright (for example `libnspr4`/`libnss3` missing), run Playwright in the project runtime container (for example official Playwright Docker image matching repo `@playwright/test` version), then record the container command and result in feature execution evidence
+   - **When `security_sensitive_scope = true`:** you are Responsible for *running* the four security scan classes (`dependency`, `secrets`, `sast`, `dast`) via `agents/security/scripts/*.sh` in application runtime containers, writing raw output under `{RUN_ID}/artifacts/security/`, and recording each in the manifest `security_scans{}` block (`ran`/`result`/`artifact`, or `ran: false` + waiver with `reason`/`owner`/`approved_on` for an unavailable scanner). Security owns the verdict — do not skip a class silently (the validator's `security_scan_*` rules fail it).
 4. **Follow SOLUTION-PATTERNS.md:**
    - Developers own unit/component and endpoint integration tests
    - QE validates coverage and closes critical cross-tier gaps
@@ -389,6 +390,7 @@ Mandatory preflight before implementation validation runs:
    - Test plan for feature
    - E2E tests (happy path + errors)
    - Feature test coverage report
+   - When `security_sensitive_scope = true`: `artifacts/security/` raw scan outputs + populated `security_scans{}` manifest block (handed to Security for the verdict)
    - `{PRODUCT_ROOT}/planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (QE feature-level signoff entry, validation evidence paths)
 
 #### 1e. DevOps (Feature Deployability Check)
@@ -560,6 +562,7 @@ Run these review agents in parallel:
    - `{PRODUCT_ROOT}/planning-mds/architecture/SOLUTION-PATTERNS.md`
    - Feature user stories with acceptance criteria
    - Existing `{PRODUCT_ROOT}/planning-mds/security/` artifacts (if present)
+   - QE's `security_scans{}` manifest block and raw outputs under `{RUN_ID}/artifacts/security/`
 
 3. **Execute security review (feature-focused):**
    - Check OWASP Top 10 risks relevant to this feature
@@ -567,7 +570,7 @@ Run these review agents in parallel:
    - Validate input/output validation and error leakage controls
    - Check secrets/config handling (no hardcoded secrets)
    - Validate audit logging coverage for mutations
-   - Run dependency/container vulnerability scans in application runtime containers (or CI jobs built from them)
+   - **You are Accountable for the scan verdict:** confirm `security_scans{}` covers all four classes (`dependency`, `secrets`, `sast`, `dast`), each either run with a resolvable artifact or carrying a complete waiver. A missing or unbacked class is a finding — do not `PASS` over it. Read the `artifacts/security/` outputs and apply exploitability/severity judgment the tools cannot; re-run any scanner yourself for deeper analysis when warranted.
 
 4. **Produce feature security review report:**
    ```markdown

@@ -215,6 +215,25 @@ Important:
 - The shell scripts are wrappers around external tools (gitleaks, audit tools, semgrep, OWASP ZAP).
 - A green result is meaningful only when required scanners are installed and the target scope is correct.
 
+#### Scan ownership (QE → Security handoff)
+
+On a `security_sensitive_scope` feature, **QE is Responsible** for running the
+four scan classes (`dependency`, `secrets`, `sast`, `dast`), writing raw output
+to `{RUN_ID}/artifacts/security/`, and recording each in the manifest
+`security_scans{}` block. **You are Accountable** for the verdict:
+
+1. Confirm `security_scans{}` covers all four classes — each either `ran` with a
+   resolvable artifact or carries a complete waiver (`reason`, `owner`,
+   `approved_on`). A missing or unbacked class is itself a finding; do not issue
+   `PASS` over it. The validator enforces this (`security_scan_*` rules) for runs
+   with `contract_effective_date >= 2026-05-25`.
+2. Read the raw artifacts under `artifacts/security/` and apply judgment the
+   tools cannot — exploitability, trust-boundary impact, severity. A clean
+   scan is necessary, not sufficient.
+3. You may re-run any scanner yourself for deeper analysis, but the recorded
+   `security_scans{}` entries and `artifacts/security/` outputs are the audit
+   trail your verdict rests on.
+
 ### Step 6: Produce Security Review Report
 
 Use the report structure in `agents/actions/review.md` and include:
