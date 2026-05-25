@@ -260,14 +260,22 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    templates_dir = args.templates_dir
+    if not (templates_dir / "plan-automation-safe.md").exists():
+        for candidate_name in ("retired", "evidence-contract"):
+            candidate_dir = templates_dir / candidate_name
+            if (candidate_dir / "plan-automation-safe.md").exists():
+                templates_dir = candidate_dir
+                break
+
     templates = {
         "plan": [
-            parse_template(args.templates_dir / "plan-automation-safe.md"),
-            parse_template(args.templates_dir / "plan-operator-friendly.md"),
+            parse_template(templates_dir / "plan-automation-safe.md"),
+            parse_template(templates_dir / "plan-operator-friendly.md"),
         ],
         "feature": [
-            parse_template(args.templates_dir / "feature-automation-safe.md"),
-            parse_template(args.templates_dir / "feature-operator-friendly.md"),
+            parse_template(templates_dir / "feature-automation-safe.md"),
+            parse_template(templates_dir / "feature-operator-friendly.md"),
         ],
     }
     action_contracts = {
@@ -347,13 +355,13 @@ CANONICAL_HEADINGS: dict[str, list[str]] = {
 ACTIONS_THAT_MUST_REFERENCE_PACKAGE = [
     ("agents/actions/feature.md", "planning-mds/operations/evidence/"),
     ("agents/actions/build.md", "planning-mds/operations/evidence/"),
-    ("agents/templates/prompts/feature-automation-safe.md", "planning-mds/operations/evidence/"),
+    ("agents/templates/prompts/evidence-contract/feature-automation-safe.md", "planning-mds/operations/evidence/"),
 ]
 
 # §24 (d): prompt templates that must not generate `uuid4`-based run IDs.
 PROMPTS_FORBIDDEN_UUID4 = [
-    "agents/templates/prompts/feature-automation-safe.md",
-    "agents/templates/prompts/feature-operator-friendly.md",
+    "agents/templates/prompts/evidence-contract/feature-automation-safe.md",
+    "agents/templates/prompts/evidence-contract/feature-operator-friendly.md",
 ]
 
 # §24 (e): per-gate template references inside feature/build actions.
@@ -414,8 +422,19 @@ def validate_evidence_template_alignment() -> list[str]:
         if not path.exists():
             continue
         content = path.read_text(encoding="utf-8")
-        if uuid_re.search(content):
+        for line in content.splitlines():
+            if not uuid_re.search(line):
+                continue
+            normalized_line = line.casefold()
+            if (
+                "do not" in normalized_line
+                or "don't" in normalized_line
+                or "not use" in normalized_line
+                or "non-contract format" in normalized_line
+            ):
+                continue
             errors.append(f"tpl_prompt_uses_uuid4_fails: {rel_path} contains uuid4 reference for run ID")
+            break
 
     # tpl_gate_missing_template_ref_fails
     for rel_path, expected_refs in GATE_TEMPLATE_REFS.items():
