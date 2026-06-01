@@ -42,19 +42,15 @@ PRDs, ADRs, `STATUS.md`, trackers) remain authoritative on conflict.
 ```
 {PRODUCT_ROOT}/planning-mds/operations/evidence/
 │
-├── {run-id}/                      ← BASE RUN  (non-feature / manual)
-│     README.md                      6 base files, no manifest
-│     action-context.md              run identity, inputs, stage
-│     artifact-trace.md              what was read / written / generated
-│     gate-decisions.md              every gate: decision, decider, why
-│     commands.log         ◀──────── JSON-Lines telemetry (append-only)
-│     lifecycle-gates.log  ◀──────── run-lifecycle-gates.py output
-│
-├── F####-{slug}/                  ← FEATURE PACKAGE (completed terminal)
-│     latest-run.json                pointer → approved run + manifest
-│     {run-id}/
-│        ├ (the 6 base files above)
-│        ├ evidence-manifest.json ◀─ machine-readable index of the run
+├── runs/
+│  └── {run-id}/                    ← CANONICAL RUN PACKAGE
+│        ├ README.md                  6 base files
+│        ├ action-context.md          run identity, inputs, stage
+│        ├ artifact-trace.md          what was read / written / generated
+│        ├ gate-decisions.md          every gate: decision, decider, why
+│        ├ commands.log     ◀──────── JSON-Lines telemetry (append-only)
+│        ├ lifecycle-gates.log
+│        ├ evidence-manifest.json     feature runs only
 │        ├ feature-action-execution.md
 │        ├ g0-assembly-plan-validation.md   (Architect)
 │        ├ g1-runtime-preflight.md          (DevOps, if runtime_bearing)
@@ -66,6 +62,10 @@ PRDs, ADRs, `STATUS.md`, trackers) remain authoritative on conflict.
 │        ├ signoff-ledger.md                (PM)
 │        ├ pm-closeout.md                   (PM)
 │        └ artifacts/  coverage/ diffs/ test-results/ security/ screenshots/
+│
+├── features/
+│  └── F####-{slug}/                ← FEATURE INDEX
+│        latest-run.json              pointer → approved run + manifest
 │
 ├── frontend-quality/             ← GLOBAL LANES (referenced, not replaced)
 └── frontend-ux/

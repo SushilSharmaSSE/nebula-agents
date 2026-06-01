@@ -16,10 +16,10 @@ AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
   FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md
   FEATURE_PATH          = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}
   ARCHIVE_FEATURE_PATH  = {PRODUCT_ROOT}/planning-mds/features/archive/{FEATURE_ID}-{FEATURE_SLUG}
-  EVIDENCE_ROOT         = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}
+  FEATURE_INDEX_ROOT    = {PRODUCT_ROOT}/planning-mds/operations/evidence/features/{FEATURE_ID}-{FEATURE_SLUG}
   RUN_ID                = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP (e.g. 2026-05-19-5ab6f922)
-  RUN_FOLDER            = {EVIDENCE_ROOT}/{RUN_ID}
-  RUN_ID_PRIOR          = prior approved run_id read from {EVIDENCE_ROOT}/latest-run.json (null if absent)
+  RUN_FOLDER            = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}
+  RUN_ID_PRIOR          = prior approved run_id read from {FEATURE_INDEX_ROOT}/latest-run.json (null if absent)
   RERUN_OF              = null | {RUN_ID_PRIOR} when this run regenerates evidence only
 
 SESSION_SETUP:
@@ -30,7 +30,8 @@ SESSION_SETUP:
     suffix = `python3 -c "import secrets; print(secrets.token_hex(4))"`
     RUN_ID = {date}-{suffix}                  # example: 2026-05-19-5ab6f922
   DO NOT use uuid4. DO NOT regenerate {RUN_ID} after the session starts.
-- Create the evidence root and run folder:
+- Create the feature index root and canonical run folder:
+    mkdir -p {FEATURE_INDEX_ROOT}
     mkdir -p {RUN_FOLDER}/artifacts/{coverage,diffs,test-results,security,screenshots}
 - Initialize {RUN_FOLDER}/evidence-manifest.json from agents/templates/evidence-manifest-template.json with:
     schema_version=1, feature_id={FEATURE_ID}, feature_slug={FEATURE_SLUG}, run_id={RUN_ID},
@@ -43,8 +44,8 @@ SESSION_SETUP:
     omissions=[], waivers={}, global_evidence_refs={}
 - Create {RUN_FOLDER}/README.md, action-context.md, artifact-trace.md, gate-decisions.md from templates
 - Touch {RUN_FOLDER}/commands.log and {RUN_FOLDER}/lifecycle-gates.log (empty JSONL/log)
-- Capture prior approved {RUN_ID_PRIOR} if {EVIDENCE_ROOT}/latest-run.json exists (for G8 supersession patch)
-- Concurrent-run check: scan {EVIDENCE_ROOT}/ for any run folder OTHER than {RUN_FOLDER} whose evidence-manifest.json carries status="draft" or status="in-progress". If one exists, HALT and reconcile externally before proceeding; the v2 contract assumes serial feature actions per feature (§17). Acceptable states for sibling runs: status="approved" with prior-run supersession handled at G8, status="superseded", or no sibling runs at all.
+- Capture prior approved {RUN_ID_PRIOR} if {FEATURE_INDEX_ROOT}/latest-run.json exists (for G8 supersession patch)
+- Concurrent-run check: scan `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/` for any run folder other than `{RUN_FOLDER}` whose `evidence-manifest.json` has `feature_id={FEATURE_ID}` and carries status="draft" or status="in-progress". If one exists, HALT and reconcile externally before proceeding; the v2 contract assumes serial feature actions per feature (§17). Acceptable states for prior runs: status="approved" with prior-run supersession handled at G8, status="superseded", or no prior runs at all.
 - All paths and commands below assume the above resolution and run folder
 
 TIER DEFAULTS (start_tier, max_auto_tier; selected by MODE):
@@ -197,8 +198,8 @@ G8 PM CLOSEOUT (PM agent role switch is mandatory)
      - Finalize {RUN_FOLDER}/evidence-manifest.json: status="approved", feature_state in {Done|Completed|Archived}, feature_path_at_closeout resolved, all gate_results present (incl. kg_reconciliation, pm_closeout, tracker_sync)
      - Move the feature folder to features/archive/ and update feature-mappings.yaml status/path (lifecycle-coupled, PM-owned)
      - AFTER the archive move, regenerate the path-sensitive coverage layer: `python3 {PRODUCT_ROOT}/scripts/kg/validate.py --write-coverage-report` (running it before the move re-stales it), then `--check-drift` exit 0
-     - Run `python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}`; it is idempotent and patches all prior approved sibling manifests to `status="superseded"` (rule two_approved_runs_without_supersession_fails)
-     - Write {EVIDENCE_ROOT}/latest-run.json (schema per §12) pointing to {RUN_FOLDER} only after patch-prior-manifest.py exits 0
+     - Run `python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}`; it is idempotent and patches all prior approved manifests for the same feature to `status="superseded"` (rule two_approved_runs_without_supersession_fails)
+     - Write {FEATURE_INDEX_ROOT}/latest-run.json (schema per §12) pointing to {RUN_FOLDER} only after patch-prior-manifest.py exits 0
      - Final validation: `validate-feature-evidence.py --stage closeout` exit 0
        (no --run-id; resolves via latest-run.json)
 
@@ -225,8 +226,8 @@ Checklist for G8 (PM Closeout) — run after G6 + tracker sync:
 - `python3 {PRODUCT_ROOT}/scripts/kg/validate.py --check-drift` MUST exit 0
 - Write pm-closeout.md (Final Story Status, Archive Decision, Deferred Follow-ups, Recommendation Acceptances, Tracker Updates, Validator Results)
 - Finalize evidence-manifest.json (status="approved")
-- Run `python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}`; it is idempotent and patches all prior approved sibling manifests to `status="superseded"`
-- Write {EVIDENCE_ROOT}/latest-run.json (schema_version=1, feature_id, run_id={RUN_ID}, run_path, manifest_path, status="approved", approved_on={today}) only after patch-prior-manifest.py exits 0
+- Run `python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}`; it is idempotent and patches all prior approved manifests for the same feature to `status="superseded"`
+- Write {FEATURE_INDEX_ROOT}/latest-run.json (schema_version=1, feature_id, run_id={RUN_ID}, run_path, manifest_path, status="approved", approved_on={today}) only after patch-prior-manifest.py exits 0
 - Run final `validate-feature-evidence.py --stage closeout` and confirm exit 0
 
 VALIDATOR-DEFECT FALLBACK (only if a validator defect blocks closeout):

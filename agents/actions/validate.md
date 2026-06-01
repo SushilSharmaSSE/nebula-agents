@@ -37,7 +37,7 @@ This action produces three validation reports:
 These reports live under the **non-feature/manual run base path** at:
 
 ```text
-{PRODUCT_ROOT}/planning-mds/operations/evidence/{RUN_ID}/
+{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}/
 ```
 
 They are governed by the §8 base run evidence contract (`README.md`, `action-context.md`, `artifact-trace.md`, `gate-decisions.md`, `commands.log`, `lifecycle-gates.log`). They do **not** require an `evidence-manifest.json` (the feature-evidence profile is for `feature.md` / `build.md` closeout runs only).

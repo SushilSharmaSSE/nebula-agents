@@ -402,7 +402,7 @@ verdicts, validation, eligibility, waivers — lives in
 Roles producing feature-evidence artifacts write into the canonical feature run folder:
 
 ```text
-{PRODUCT_ROOT}/planning-mds/operations/evidence/F####-{slug}/{RUN_ID}/
+{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}/
 ```
 
 | Role | Required artifact(s) at the canonical run folder | Verdict artifact |
@@ -412,6 +412,6 @@ Roles producing feature-evidence artifacts write into the canonical feature run 
 | DevOps | `deployability-check.md`; `g1-runtime-preflight.md` when `runtime_bearing = true` | `deployability-check.md` |
 | Code Reviewer | `code-review-report.md` | same |
 | Security Reviewer | `security-review-report.md` (when forced or required) | same |
-| Product Manager | `signoff-ledger.md`, `pm-closeout.md`, and the feature-root `latest-run.json` | n/a (PM closeout is a gate, not a role-results row by default) |
+| Product Manager | `signoff-ledger.md`, `pm-closeout.md`, and the feature-index `latest-run.json` | n/a (PM closeout is a gate, not a role-results row by default) |
 
 Recommendation severity is `low` / `medium` / `high` / `critical`; `high`/`critical` require a PM Acceptance Line in `pm-closeout.md` (see AGENT-OPS.md → Verdicts & Recommendations). `agents/actions/validate.md` runs write three validation reports into the **base run** path, not a feature package (see AGENT-OPS.md → The Gate Timeline).

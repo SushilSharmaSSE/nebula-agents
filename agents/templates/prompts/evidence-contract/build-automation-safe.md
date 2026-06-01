@@ -10,14 +10,14 @@ OPTIONAL INPUTS (defaults apply when omitted):
 
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
   BUILD_RUN_ID          = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
-  BUILD_RUN_FOLDER      = {PRODUCT_ROOT}/planning-mds/operations/evidence/{BUILD_RUN_ID}
+  BUILD_RUN_FOLDER      = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{BUILD_RUN_ID}
   # Per-feature values, resolved from REGISTRY.md per FEATURE_ID in BUILD_SCOPE:
   FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md
   FEATURE_PATH          = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}
-  EVIDENCE_ROOT         = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}
+  FEATURE_INDEX_ROOT    = {PRODUCT_ROOT}/planning-mds/operations/evidence/features/{FEATURE_ID}-{FEATURE_SLUG}
   RUN_ID                = per-feature run ID generated when a new feature package is produced (YYYY-MM-DD-{secrets.token_hex(4)})
-  RUN_FOLDER            = {EVIDENCE_ROOT}/{RUN_ID}
-  RUN_ID_PRIOR          = prior approved run_id read from {EVIDENCE_ROOT}/latest-run.json (null if absent)
+  RUN_FOLDER            = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}
+  RUN_ID_PRIOR          = prior approved run_id read from {FEATURE_INDEX_ROOT}/latest-run.json (null if absent)
   RERUN_OF              = null | {RUN_ID_PRIOR} when this run regenerates evidence only
 
 SESSION_SETUP:
@@ -29,7 +29,7 @@ SESSION_SETUP:
     BUILD_RUN_ID = {date}-{suffix}
   DO NOT use uuid4. DO NOT regenerate {BUILD_RUN_ID} after the session starts.
 - Create the build run folder under the base run evidence profile (§8 of v2 plan):
-    BUILD_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{BUILD_RUN_ID}/
+    BUILD_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{BUILD_RUN_ID}/
     mkdir -p {BUILD_RUN_FOLDER}
 - Initialize {BUILD_RUN_FOLDER} base run files from templates: README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log (empty JSONL), lifecycle-gates.log (empty)
 - DO NOT place a feature evidence package under {BUILD_RUN_FOLDER}; per-feature packages live at each feature's {RUN_FOLDER}
@@ -38,7 +38,7 @@ SESSION_SETUP:
 PRECONDITIONS:
 - {BUILD_RUN_FOLDER} created and base run files present
 - Every feature in BUILD_SCOPE has either:
-    (a) an existing approved feature evidence package referenced by {EVIDENCE_ROOT}/latest-run.json, OR
+    (a) an existing approved feature evidence package referenced by {FEATURE_INDEX_ROOT}/latest-run.json, OR
     (b) a planned canonical evidence package to be produced during this build
 - `python3 {PRODUCT_ROOT}/scripts/kg/validate.py` exits 0 at start
 
@@ -50,15 +50,15 @@ CONTEXT LOADING ORDER:
 5. {PRODUCT_ROOT}/planning-mds/features/REGISTRY.md (parse Active, Planned, Archived, Retired)
 6. For each FEATURE_ID in BUILD_SCOPE (resolve {FEATURE_SLUG} from REGISTRY.md per feature):
    - {FEATURE_PATH}/STATUS.md
-   - {EVIDENCE_ROOT}/latest-run.json (if exists; non-existence is normal for features being closed for the first time in this build)
+   - {FEATURE_INDEX_ROOT}/latest-run.json (if exists; non-existence is normal for features being closed for the first time in this build)
 
 FORBIDDEN:
 - Generating {BUILD_RUN_ID} or any feature {RUN_ID} with uuid4
-- Closing a feature without a canonical feature evidence package at {EVIDENCE_ROOT}/latest-run.json with status="approved"
+- Closing a feature without a canonical feature evidence package at {FEATURE_INDEX_ROOT}/latest-run.json with status="approved"
 - Calling tracker sync (validate-trackers.py) before per-feature G6 candidate validation has passed for every feature being closed in this build
 - Writing per-feature role reports (g0-*, test-*, code-review-*, etc.) into {BUILD_RUN_FOLDER} instead of the feature run folder
 - Using the build run folder as a substitute for any feature's evidence package
-- Marking a feature Archived in REGISTRY.md while its {EVIDENCE_ROOT}/latest-run.json is missing or non-approved
+- Marking a feature Archived in REGISTRY.md while its {FEATURE_INDEX_ROOT}/latest-run.json is missing or non-approved
 - Passing `--evidence-effective-date` earlier than the framework default
 
 REQUIRED TOOL INVOCATIONS:
@@ -109,8 +109,8 @@ B4   PER-FEATURE G8 PM CLOSEOUT (PM role switch mandatory)
        Execute the G8 PM CLOSEOUT CHECKLIST from evidence-contract/feature-automation-safe.md:
          - Write {RUN_FOLDER}/pm-closeout.md
          - Finalize evidence-manifest.json: status="approved", feature_state, feature_path_at_closeout
-         - Run `python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}`; it is idempotent and patches all prior approved sibling manifests to status="superseded"
-         - Write {EVIDENCE_ROOT}/latest-run.json only after patch-prior-manifest.py exits 0
+         - Run `python3 agents/product-manager/scripts/patch-prior-manifest.py --product-root {PRODUCT_ROOT} --feature {FEATURE_ID} --new-run-id {RUN_ID}`; it is idempotent and patches all prior approved manifests for the same feature to status="superseded"
+         - Write {FEATURE_INDEX_ROOT}/latest-run.json only after patch-prior-manifest.py exits 0
          - Update STATUS.md, REGISTRY.md, ROADMAP.md, BLUEPRINT.md, KG mappings
          - If Done/Completed: move feature folder to archive/
        - `validate-feature-evidence.py --feature {FEATURE_ID} --stage closeout` exit 0

@@ -45,8 +45,10 @@ Build Complete
 When this build action archives a delivered feature at closeout, it produces the §10 canonical feature evidence package at:
 
 ```text
-{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}/{RUN_ID}/
+{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}/
 ```
+
+The per-feature pointer/index lives at `{PRODUCT_ROOT}/planning-mds/operations/evidence/features/{FEATURE_ID}-{FEATURE_SLUG}/latest-run.json`.
 
 For each `FEATURE_ID` in `BUILD_SCOPE`, `FEATURE_SLUG` and the per-feature `RUN_ID` are resolved by the build orchestrator per `evidence-contract/build-automation-safe.md`.
 

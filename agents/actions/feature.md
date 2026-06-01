@@ -118,8 +118,10 @@ Load in this order when the work is feature-scoped:
 Every governed completed-terminal feature run writes its evidence into the canonical package shape (§10) at:
 
 ```text
-{PRODUCT_ROOT}/planning-mds/operations/evidence/F####-{slug}/{RUN_ID}/
+{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}/
 ```
+
+The feature index root lives separately at `{PRODUCT_ROOT}/planning-mds/operations/evidence/features/F####-{slug}/` and carries `latest-run.json` once the run is approved.
 
 The §17 stage matrix dictates which artifacts must exist at each gate. The full set produced by closeout:
 
@@ -144,7 +146,7 @@ The §17 stage matrix dictates which artifacts must exist at each gate. The full
 - `kg-reconciliation.md` (Architect output at `G7`; template: `agents/templates/kg-reconciliation-template.md`) — the as-built-vs-graph binding delta, new/affirmed canonical nodes, and the green-validator record
 - `pm-closeout.md` (template: `agents/templates/pm-closeout-template.md`)
 
-The feature evidence root also carries `latest-run.json` (§12) once the run is approved.
+The feature index root also carries `latest-run.json` (§12) once the run is approved.
 
 Run-ID format: `YYYY-MM-DD-XXXXXXXX` per §11 — date is local-at-session-start; `XXXXXXXX` is 8-char hex from cryptographic randomness (e.g. `secrets.token_hex(4)`). The run ID is recorded in `action-context.md` and the manifest at G0 and carried unchanged through closeout. Validators must not infer the active run by sorting folders; see §17 for run-resolution rules.
 

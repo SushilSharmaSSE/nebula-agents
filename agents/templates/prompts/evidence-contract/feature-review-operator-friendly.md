@@ -13,11 +13,11 @@ OPTIONAL INPUTS (defaults apply when omitted):
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
 - `FEATURE_SLUG` - kebab-case slug for `{FEATURE_ID}` from `REGISTRY.md`
 - `FEATURE_PATH` - `{PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}` or archive path when closed
-- `EVIDENCE_ROOT` - `{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}`
-- `FEATURE_RUN_ID` - from `{EVIDENCE_ROOT}/latest-run.json` when `MODE=closeout-audit` and no override is set
-- `FEATURE_RUN_FOLDER` - `{EVIDENCE_ROOT}/{FEATURE_RUN_ID}`
+- `FEATURE_INDEX_ROOT` - `{PRODUCT_ROOT}/planning-mds/operations/evidence/features/{FEATURE_ID}-{FEATURE_SLUG}`
+- `FEATURE_RUN_ID` - from `{FEATURE_INDEX_ROOT}/latest-run.json` when `MODE=closeout-audit` and no override is set
+- `FEATURE_RUN_FOLDER` - `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{FEATURE_RUN_ID}`
 - `FEATURE_REVIEW_RUN_ID` - `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start
-- `FEATURE_REVIEW_RUN_FOLDER` - `{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_REVIEW_RUN_ID}`
+- `FEATURE_REVIEW_RUN_FOLDER` - `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{FEATURE_REVIEW_RUN_ID}`
 
 Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command. Generate `FEATURE_REVIEW_RUN_ID` once using the contract format `YYYY-MM-DD-[a-z0-9]{8}` with an 8-character suffix from cryptographic randomness. Do not use `uuid4`. Create `{FEATURE_REVIEW_RUN_FOLDER}` and initialize the six section-8 base run files from templates: `README.md`, `action-context.md`, `artifact-trace.md`, `gate-decisions.md`, empty `commands.log`, and empty `lifecycle-gates.log`. Create `artifacts/` for command output capture.
 

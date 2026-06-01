@@ -875,8 +875,39 @@ def load_registry(product_root: Path, result: Result) -> dict[str, RegistryRow]:
     return rows
 
 
-def evidence_root_for(product_root: Path, row: RegistryRow) -> Path:
-    return product_root / "planning-mds" / "operations" / "evidence" / row.evidence_slug
+def evidence_operations_root(product_root: Path) -> Path:
+    return product_root / "planning-mds" / "operations" / "evidence"
+
+
+def evidence_runs_root(product_root: Path) -> Path:
+    return evidence_operations_root(product_root) / "runs"
+
+
+def feature_index_root_for(product_root: Path, row: RegistryRow) -> Path:
+    return evidence_operations_root(product_root) / "features" / row.evidence_slug
+
+
+def run_folder_for(product_root: Path, run_id: str) -> Path:
+    return evidence_runs_root(product_root) / run_id
+
+
+def feature_manifests(product_root: Path, feature_id: str) -> list[Path]:
+    runs_root = evidence_runs_root(product_root)
+    if not runs_root.exists():
+        return []
+    manifests: list[Path] = []
+    for candidate in sorted(runs_root.iterdir()):
+        if not candidate.is_dir() or not RUN_ID_RE.fullmatch(candidate.name):
+            continue
+        manifest_path = candidate / "evidence-manifest.json"
+        if not manifest_path.exists():
+            continue
+        loaded, error = load_json_file(manifest_path)
+        if error or not isinstance(loaded, dict):
+            continue
+        if str(loaded.get("feature_id", "")) == feature_id:
+            manifests.append(manifest_path)
+    return manifests
 
 
 def feature_path_for(product_root: Path, row: RegistryRow) -> Path:
@@ -940,12 +971,12 @@ def emit_reopened_reentry_rule_if_missing(
     `reopened_historical_missing_evidence_fails` so the cause is clear in
     operator output (it complements `post_contract_archived_missing_evidence_fails`).
     """
-    evidence_root = evidence_root_for(product_root, row)
-    if not evidence_root.exists() or not (evidence_root / "latest-run.json").exists():
+    feature_index_root = feature_index_root_for(product_root, row)
+    if not feature_index_root.exists() or not (feature_index_root / "latest-run.json").exists():
         result.add_error(
             "reopened_historical_missing_evidence_fails",
             "Archived feature has Evidence Reentry Date on/after the effective date but no canonical evidence",
-            feature=row.feature_id, path=str(evidence_root),
+            feature=row.feature_id, path=str(feature_index_root),
         )
 
 
@@ -957,12 +988,12 @@ def emit_malformed_closeout_date_rule_if_missing(
     `active_done_pre_contract_malformed_date_requires_evidence_fails` only if
     canonical evidence is also missing, so operators see both the cause and
     the missing package together."""
-    evidence_root = evidence_root_for(product_root, row)
-    if not evidence_root.exists() or not (evidence_root / "latest-run.json").exists():
+    feature_index_root = feature_index_root_for(product_root, row)
+    if not feature_index_root.exists() or not (feature_index_root / "latest-run.json").exists():
         result.add_error(
             "active_done_pre_contract_malformed_date_requires_evidence_fails",
             "Active Done feature has a malformed Closeout review date and no canonical evidence; date cannot qualify for the pre-contract skip",
-            feature=row.feature_id, path=str(evidence_root),
+            feature=row.feature_id, path=str(feature_index_root),
         )
 
 
@@ -1054,13 +1085,13 @@ def validate_latest_run(
 
 
 def resolve_run(row: RegistryRow, stage: str, run_id: str | None, result: Result) -> tuple[str | None, Path | None, bool]:
-    root = evidence_root_for(result.product_root, row)
+    root = feature_index_root_for(result.product_root, row)
     latest_path = root / "latest-run.json"
     if stage in {"G0", "G1", "G2", "G3", "G5"}:
         if not run_id:
             result.add_error("stage_without_run_id_before_g6_fails", f"{stage} validation requires --run-id", feature=row.feature_id)
             return None, None, False
-        run_folder = root / run_id
+        run_folder = run_folder_for(result.product_root, run_id)
         if not run_folder.exists():
             result.add_error("run_folder_not_found_fails", "Run folder does not exist", feature=row.feature_id, run_id=run_id, path=str(run_folder))
             return run_id, None, False
@@ -1072,7 +1103,7 @@ def resolve_run(row: RegistryRow, stage: str, run_id: str | None, result: Result
                 resolution = validate_latest_run(row, result, latest_path, run_id, "stage_g6_run_id_mismatch_with_latest_run_fails")
                 if resolution.mismatch or resolution.unloadable:
                     return run_id, None, False
-            run_folder = root / run_id
+            run_folder = run_folder_for(result.product_root, run_id)
             if not run_folder.exists():
                 result.add_error("run_folder_not_found_fails", "Run folder does not exist", feature=row.feature_id, run_id=run_id, path=str(run_folder))
                 return run_id, None, False
@@ -2440,21 +2471,27 @@ def validate_cross_artifact_identity(
     run_id = manifest.get("run_id") if isinstance(manifest.get("run_id"), str) else None
     common = {"feature": feature_id, "run_id": run_id, "path": str(manifest_path)}
 
-    # feature_identity_mismatch_fails — registry, manifest, evidence-root folder, latest-run
+    # feature_identity_mismatch_fails — registry, manifest, feature index folder, latest-run
     if str(manifest.get("feature_id", "")) != feature_id:
         result.add_error(
             "feature_identity_mismatch_fails",
             f"Manifest feature_id {manifest.get('feature_id')!r} disagrees with registry {feature_id!r}",
             **common,
         )
-    evidence_root = manifest_path.parent.parent
-    if not evidence_root.name.startswith(f"{feature_id}-"):
+    feature_index_root = feature_index_root_for(result.product_root, row)
+    if not feature_index_root.name.startswith(f"{feature_id}-"):
         result.add_error(
             "feature_identity_mismatch_fails",
-            f"Evidence root folder {evidence_root.name!r} does not start with {feature_id}-",
+            f"Feature index folder {feature_index_root.name!r} does not start with {feature_id}-",
             **common,
         )
-    latest_path = evidence_root / "latest-run.json"
+    if run_folder.parent != evidence_runs_root(result.product_root):
+        result.add_error(
+            "feature_identity_mismatch_fails",
+            f"Run folder {run_folder!s} is not under the canonical runs root",
+            **common,
+        )
+    latest_path = feature_index_root / "latest-run.json"
     if latest_path.exists():
         loaded, error = load_json_file(latest_path)
         if not error and isinstance(loaded, dict):
@@ -2802,7 +2839,7 @@ def validate_phase2b_additional_rules(
 
     # latest-run.json schema rules (§12). validate_latest_run already enforces
     # wrong-manifest / mismatched-run; these add path-shape and status-enum checks.
-    latest_path = manifest_path.parent.parent / "latest-run.json"
+    latest_path = feature_index_root_for(result.product_root, row) / "latest-run.json"
     if latest_path.exists():
         loaded, _ = load_json_file(latest_path)
         if isinstance(loaded, dict):
@@ -2827,7 +2864,7 @@ def validate_phase2b_additional_rules(
     # manifest_rerun_of_unknown_run_fails (§11 rerun_of contract).
     rerun_of = manifest.get("rerun_of")
     if isinstance(rerun_of, str) and rerun_of:
-        prior_folder = manifest_path.parent.parent / rerun_of
+        prior_folder = evidence_runs_root(result.product_root) / rerun_of
         prior_manifest = prior_folder / "evidence-manifest.json"
         if not prior_manifest.exists():
             result.add_error(
@@ -3148,28 +3185,21 @@ def validate_manifest(
 
     # Two-approved supersession check
     if status_value == "approved":
-        sibling_root = manifest_path.parent.parent
-        if sibling_root.exists():
-            other_approved: list[Path] = []
-            for sibling in sibling_root.iterdir():
-                if not sibling.is_dir() or sibling == manifest_path.parent:
-                    continue
-                if not RUN_ID_RE.fullmatch(sibling.name):
-                    continue
-                sibling_manifest = sibling / "evidence-manifest.json"
-                if not sibling_manifest.exists():
-                    continue
-                sibling_doc, sibling_error = load_json_file(sibling_manifest)
-                if sibling_error or not isinstance(sibling_doc, dict):
-                    continue
-                if sibling_doc.get("status") == "approved":
-                    other_approved.append(sibling_manifest)
-            if other_approved:
-                result.add_error(
-                    "two_approved_runs_without_supersession_fails",
-                    f"Feature evidence root has multiple approved manifests: {[str(p) for p in other_approved]}",
-                    **common,
-                )
+        other_approved: list[Path] = []
+        for sibling_manifest in feature_manifests(result.product_root, row.feature_id):
+            if sibling_manifest == manifest_path:
+                continue
+            sibling_doc, sibling_error = load_json_file(sibling_manifest)
+            if sibling_error or not isinstance(sibling_doc, dict):
+                continue
+            if sibling_doc.get("status") == "approved":
+                other_approved.append(sibling_manifest)
+        if other_approved:
+            result.add_error(
+                "two_approved_runs_without_supersession_fails",
+                f"Feature has multiple approved manifests: {[str(p) for p in other_approved]}",
+                **common,
+            )
 
     validate_manifest_deep(row, run_id, loaded, manifest_path, result, stage)
     return loaded

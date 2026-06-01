@@ -478,8 +478,8 @@ def test_status_story_value_unknown_story_fires(tmp_path: Path) -> None:
 
 | Story | Role | Reviewer | Verdict | Evidence | Date | Notes |
 |-------|------|----------|---------|----------|------|-------|
-| F0001-S0099 | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/F0001-new/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
-| F0001-S0099 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/F0001-new/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
+| F0001-S0099 | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/runs/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
+| F0001-S0099 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/runs/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
 """,
         encoding="utf-8",
     )
@@ -521,8 +521,8 @@ def test_status_recommendation_without_acceptance_fires(tmp_path: Path) -> None:
 
 | Story | Role | Reviewer | Verdict | Evidence | Date | Notes |
 |-------|------|----------|---------|----------|------|-------|
-| F0001-S0001 | Quality Engineer | reviewer | PASS WITH RECOMMENDATIONS | planning-mds/operations/evidence/F0001-new/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
-| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/F0001-new/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
+| F0001-S0001 | Quality Engineer | reviewer | PASS WITH RECOMMENDATIONS | planning-mds/operations/evidence/runs/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
+| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/runs/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
 """,
         encoding="utf-8",
     )

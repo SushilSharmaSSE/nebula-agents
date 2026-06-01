@@ -14,16 +14,16 @@ OPTIONAL INPUTS (defaults apply when omitted):
 
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
   VALIDATE_RUN_ID       = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
-  VALIDATE_RUN_FOLDER   = {PRODUCT_ROOT}/planning-mds/operations/evidence/{VALIDATE_RUN_ID}
+  VALIDATE_RUN_FOLDER   = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{VALIDATE_RUN_ID}
   FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md (only when FEATURE_ID is set)
-  EVIDENCE_ROOT         = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG} (only when FEATURE_ID is set)
+  FEATURE_INDEX_ROOT         = {PRODUCT_ROOT}/planning-mds/operations/evidence/features/{FEATURE_ID}-{FEATURE_SLUG} (only when FEATURE_ID is set)
 
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
 - Echo resolved absolute {PRODUCT_ROOT}
 - Generate {VALIDATE_RUN_ID} once at session start using contract format YYYY-MM-DD-[a-z0-9]{8} (suffix from `secrets.token_hex(4)`). DO NOT use uuid4.
 - Create base run folder per §8:
-    VALIDATE_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{VALIDATE_RUN_ID}/
+    VALIDATE_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{VALIDATE_RUN_ID}/
     mkdir -p {VALIDATE_RUN_FOLDER}/artifacts
 - Initialize base run files from templates: README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log (empty JSONL), lifecycle-gates.log (empty)
 
@@ -33,7 +33,7 @@ PRECONDITIONS:
 - For VALIDATION_SCOPE in {architecture, all}: solution-ontology.yaml, canonical-nodes.yaml, feature-mappings.yaml exist
 - For VALIDATION_SCOPE in {implementation, all}: at least one completed terminal feature in REGISTRY.md OR FEATURE_ID is set
 - When implementation validation targets an in-progress feature with STAGE in {G0..G5}: --run-id is mandatory
-- When implementation validation targets an approved feature at STAGE in {G8|closeout}: {EVIDENCE_ROOT}/latest-run.json must exist
+- When implementation validation targets an approved feature at STAGE in {G8|closeout}: {FEATURE_INDEX_ROOT}/latest-run.json must exist
 
 CONTEXT LOADING ORDER:
 1. agents/ROUTER.md

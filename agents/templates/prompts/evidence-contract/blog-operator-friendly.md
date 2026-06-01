@@ -11,7 +11,7 @@ OPTIONAL INPUTS (defaults apply when omitted):
 
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
 - `BLOG_RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start
-- `BLOG_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{BLOG_RUN_ID}`
+- `BLOG_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{BLOG_RUN_ID}`
 - `FEATURE_REF_SLUG` — kebab-case slug for `{FEATURE_REF}` from `REGISTRY.md` (only when `FEATURE_REF` is set)
 - `FEATURE_REF_PATH` — `{PRODUCT_ROOT}/planning-mds/features/{FEATURE_REF}-{FEATURE_REF_SLUG}` (only when `FEATURE_REF` is set)
 
@@ -25,7 +25,7 @@ Run `agents/actions/blog.md` with `POST_TYPE`, `TARGET_PATH`, `AMPLIFICATION`, a
 
 Load context in this order: `agents/ROUTER.md` → `agents/agent-map.yaml` → `agents/docs/AGENT-USE.md` → `agents/actions/blog.md` → `agents/blogger/SKILL.md`. For `FEATURE_REF`, also load `{FEATURE_REF_PATH}/README.md`, `{FEATURE_REF_PATH}/PRD.md`, `{FEATURE_REF_PATH}/feature-assembly-plan.md`, and (if archived) its `pm-closeout.md` — all read-only.
 
-Don't generate `{BLOG_RUN_ID}` with `uuid4`. Don't write into any feature evidence package (`{PRODUCT_ROOT}/planning-mds/operations/evidence/F####-*/`). Don't cite a blog post as evidence for a completed terminal feature. Don't draft before the EDITORIAL BRIEF gate. Don't publish or amplify before the EDITORIAL GATE. Don't misrepresent feature status, dates, or decisions — cross-check claims against `REGISTRY.md` and `pm-closeout.md` when `FEATURE_REF` is set.
+Don't generate `{BLOG_RUN_ID}` with `uuid4`. Don't write into any feature evidence package (`####-*/`). Don't cite a blog post as evidence for a completed terminal feature. Don't draft before the EDITORIAL BRIEF gate. Don't publish or amplify before the EDITORIAL GATE. Don't misrepresent feature status, dates, or decisions — cross-check claims against `REGISTRY.md` and `pm-closeout.md` when `FEATURE_REF` is set.
 
 Append every shell command to `{BLOG_RUN_FOLDER}/commands.log` per the §13 JSONL schema.
 

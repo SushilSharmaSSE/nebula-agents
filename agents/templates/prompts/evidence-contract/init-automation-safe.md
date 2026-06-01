@@ -13,7 +13,7 @@ OPTIONAL INPUTS (defaults apply when omitted):
 
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
   INIT_RUN_ID           = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
-  INIT_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/{INIT_RUN_ID}
+  INIT_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{INIT_RUN_ID}
 
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup (operator input, NEBULA_PRODUCT_ROOT env var, or default `../<product-repo>`)
@@ -21,7 +21,7 @@ SESSION_SETUP:
 - Confirm {PRODUCT_ROOT} is empty or a new repository willing to accept scaffolded files
 - Generate {INIT_RUN_ID} once at session start using contract format YYYY-MM-DD-[a-z0-9]{8} (suffix from `secrets.token_hex(4)`). DO NOT use uuid4.
 - Create base run folder per §8 (created after {PRODUCT_ROOT} scaffolding lands operations/evidence/):
-    INIT_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{INIT_RUN_ID}/
+    INIT_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{INIT_RUN_ID}/
     mkdir -p {INIT_RUN_FOLDER}
 - Initialize base run files: README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log (empty JSONL), lifecycle-gates.log (empty)
 

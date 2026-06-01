@@ -11,7 +11,7 @@ OPTIONAL INPUTS (defaults apply when omitted):
 
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
 - `INIT_RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start
-- `INIT_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{INIT_RUN_ID}` (created once `operations/evidence/` has been scaffolded by gate I4)
+- `INIT_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{INIT_RUN_ID}` (created once `operations/evidence/` has been scaffolded by gate I4)
 
 Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command. Confirm `{PRODUCT_ROOT}` is empty or a new repository willing to accept scaffolded files. If it's non-empty, do not proceed without explicit operator confirmation.
 

@@ -12,9 +12,9 @@ OPTIONAL INPUTS (defaults apply when omitted):
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
 - `FEATURE_SLUG` — kebab-case slug for `{FEATURE_ID}` from `REGISTRY.md` (only when `MODE=feature-scoped`)
 - `FEATURE_PATH` — `{PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}` (only when `MODE=feature-scoped`)
-- `OUTPUT_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}/{RUN_ID}` (only when `MODE=feature-scoped`)
+- `OUTPUT_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}` (only when `MODE=feature-scoped`)
 - `REVIEW_RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start (only when `MODE=standalone`)
-- `REVIEW_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{REVIEW_RUN_ID}` (only when `MODE=standalone`)
+- `REVIEW_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{REVIEW_RUN_ID}` (only when `MODE=standalone`)
 
 Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command.
 

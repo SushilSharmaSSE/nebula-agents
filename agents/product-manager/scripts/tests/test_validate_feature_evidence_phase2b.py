@@ -9,6 +9,7 @@ from test_validate_feature_evidence import (
     RUN_ID,
     ROLE_FILES,
     json_result,
+    latest_run_path,
     run_validator,
     write_manifest_run,
     write_registry,
@@ -80,7 +81,7 @@ def test_feature_identity_mismatch_via_latest_run_fires(tmp_path: Path) -> None:
         },
     )
     # Corrupt latest-run.json to refer to a different feature_id.
-    latest = run_folder.parent / "latest-run.json"
+    latest = latest_run_path(product, "F0001-new")
     data = json.loads(latest.read_text(encoding="utf-8"))
     data["feature_id"] = "F9999"
     latest.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -216,7 +217,7 @@ def test_command_artifact_missing_fires(tmp_path: Path) -> None:
             "cwd": "{PRODUCT_ROOT}",
             "command": "pnpm test",
             "exit_code": 0,
-            "artifacts": ["planning-mds/operations/evidence/F0001-new/2026-05-19-5ab6f922/artifacts/test-results/nonexistent.log"],
+            "artifacts": ["planning-mds/operations/evidence/runs/2026-05-19-5ab6f922/artifacts/test-results/nonexistent.log"],
             "redactions": [],
         }) + "\n",
         encoding="utf-8",

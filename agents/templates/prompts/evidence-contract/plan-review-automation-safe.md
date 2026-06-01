@@ -12,7 +12,7 @@ OPTIONAL INPUTS (defaults apply when omitted):
 
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
   PLAN_REVIEW_RUN_ID     = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
-  PLAN_REVIEW_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{PLAN_REVIEW_RUN_ID}
+  PLAN_REVIEW_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{PLAN_REVIEW_RUN_ID}
   FEATURE_SLUG           = kebab-case slug for TARGET from REGISTRY.md when PLAN_SCOPE=feature
   FEATURE_PATH           = {PRODUCT_ROOT}/planning-mds/features/{TARGET}-{FEATURE_SLUG} when PLAN_SCOPE=feature
 

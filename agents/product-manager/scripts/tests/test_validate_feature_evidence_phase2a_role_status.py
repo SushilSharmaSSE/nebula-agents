@@ -199,7 +199,7 @@ def test_status_missing_baseline_role_fires(tmp_path: Path) -> None:
     )
     # Overwrite STATUS.md with only Code Reviewer required (missing baseline QE).
     feature_path = product / "planning-mds" / "features" / "archive" / "F0001-new"
-    write_status_md(feature_path, "F0001", f"planning-mds/operations/evidence/F0001-new/{RUN_ID}", ["Code Reviewer"], stage="closeout")
+    write_status_md(feature_path, "F0001", f"planning-mds/operations/evidence/runs/{RUN_ID}", ["Code Reviewer"], stage="closeout")
 
     result = run_validator(product, "--feature", "F0001", "--stage", "closeout", "--json")
     rules = {entry["rule_id"] for entry in json_result(result)["errors"]}
@@ -225,7 +225,7 @@ def test_status_missing_forced_role_fires(tmp_path: Path) -> None:
     )
     # STATUS.md without Security Reviewer in Required Role Matrix.
     feature_path = product / "planning-mds" / "features" / "archive" / "F0001-new"
-    write_status_md(feature_path, "F0001", f"planning-mds/operations/evidence/F0001-new/{RUN_ID}", ["Quality Engineer", "Code Reviewer"], stage="closeout")
+    write_status_md(feature_path, "F0001", f"planning-mds/operations/evidence/runs/{RUN_ID}", ["Quality Engineer", "Code Reviewer"], stage="closeout")
 
     result = run_validator(product, "--feature", "F0001", "--stage", "closeout", "--json")
     rules = {entry["rule_id"] for entry in json_result(result)["errors"]}
@@ -264,8 +264,8 @@ def test_status_bad_date_fires(tmp_path: Path) -> None:
 
 | Story | Role | Reviewer | Verdict | Evidence | Date | Notes |
 |-------|------|----------|---------|----------|------|-------|
-| F0001-S0001 | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/F0001-new/{RUN_ID}/test-execution-report.md | not-a-date | - |
-| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/F0001-new/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
+| F0001-S0001 | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/runs/{RUN_ID}/test-execution-report.md | not-a-date | - |
+| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/runs/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
 """,
         encoding="utf-8",
     )
@@ -307,8 +307,8 @@ def test_status_missing_reviewer_fires(tmp_path: Path) -> None:
 
 | Story | Role | Reviewer | Verdict | Evidence | Date | Notes |
 |-------|------|----------|---------|----------|------|-------|
-| F0001-S0001 | Quality Engineer |  | PASS | planning-mds/operations/evidence/F0001-new/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
-| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/F0001-new/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
+| F0001-S0001 | Quality Engineer |  | PASS | planning-mds/operations/evidence/runs/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
+| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/runs/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
 """,
         encoding="utf-8",
     )
@@ -350,8 +350,8 @@ def test_status_story_value_bad_format_fires(tmp_path: Path) -> None:
 
 | Story | Role | Reviewer | Verdict | Evidence | Date | Notes |
 |-------|------|----------|---------|----------|------|-------|
-| story-one | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/F0001-new/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
-| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/F0001-new/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
+| story-one | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/runs/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
+| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/runs/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
 """,
         encoding="utf-8",
     )
@@ -393,8 +393,8 @@ def test_status_evidence_missing_file_fires(tmp_path: Path) -> None:
 
 | Story | Role | Reviewer | Verdict | Evidence | Date | Notes |
 |-------|------|----------|---------|----------|------|-------|
-| F0001-S0001 | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/F0001-new/{RUN_ID}/no-such-file.md | 2026-05-19 | - |
-| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/F0001-new/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
+| F0001-S0001 | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/runs/{RUN_ID}/no-such-file.md | 2026-05-19 | - |
+| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/runs/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
 """,
         encoding="utf-8",
     )
@@ -437,7 +437,7 @@ def test_status_story_missing_role_fires(tmp_path: Path) -> None:
 
 | Story | Role | Reviewer | Verdict | Evidence | Date | Notes |
 |-------|------|----------|---------|----------|------|-------|
-| F0001-S0001 | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/F0001-new/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
+| F0001-S0001 | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/runs/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
 """,
         encoding="utf-8",
     )
@@ -479,9 +479,9 @@ def test_status_stale_pass_followed_by_fail_fires(tmp_path: Path) -> None:
 
 | Story | Role | Reviewer | Verdict | Evidence | Date | Notes |
 |-------|------|----------|---------|----------|------|-------|
-| F0001-S0001 | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/F0001-new/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
-| F0001-S0001 | Quality Engineer | reviewer | FAIL | planning-mds/operations/evidence/F0001-new/{RUN_ID}/test-execution-report.md | 2026-05-20 | regression |
-| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/F0001-new/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
+| F0001-S0001 | Quality Engineer | reviewer | PASS | planning-mds/operations/evidence/runs/{RUN_ID}/test-execution-report.md | 2026-05-19 | - |
+| F0001-S0001 | Quality Engineer | reviewer | FAIL | planning-mds/operations/evidence/runs/{RUN_ID}/test-execution-report.md | 2026-05-20 | regression |
+| F0001-S0001 | Code Reviewer | reviewer | APPROVED | planning-mds/operations/evidence/runs/{RUN_ID}/code-review-report.md | 2026-05-19 | - |
 """,
         encoding="utf-8",
     )

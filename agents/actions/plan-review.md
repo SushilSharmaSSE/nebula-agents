@@ -45,7 +45,7 @@ Plan Review Complete
 Write review outputs to the base/manual run evidence path:
 
 ```text
-{PRODUCT_ROOT}/planning-mds/operations/evidence/{RUN_ID}/
+{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}/
 ```
 
 Required output:

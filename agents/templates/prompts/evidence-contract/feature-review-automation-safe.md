@@ -15,23 +15,23 @@ OPTIONAL INPUTS (defaults apply when omitted):
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
   FEATURE_SLUG            = kebab-case slug for FEATURE_ID from REGISTRY.md
   FEATURE_PATH            = current or archived feature path for FEATURE_ID
-  EVIDENCE_ROOT           = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}
+  FEATURE_INDEX_ROOT       = {PRODUCT_ROOT}/planning-mds/operations/evidence/features/{FEATURE_ID}-{FEATURE_SLUG}
   FEATURE_RUN_ID          = latest-run.json run_id when MODE=closeout-audit and no override is set
-  FEATURE_RUN_FOLDER      = {EVIDENCE_ROOT}/{FEATURE_RUN_ID}
+  FEATURE_RUN_FOLDER      = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{FEATURE_RUN_ID}
   FEATURE_REVIEW_RUN_ID   = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
-  FEATURE_REVIEW_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_REVIEW_RUN_ID}
+  FEATURE_REVIEW_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{FEATURE_REVIEW_RUN_ID}
 
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md -> Session Setup
 - Echo resolved absolute {PRODUCT_ROOT}
 - Generate FEATURE_REVIEW_RUN_ID once using YYYY-MM-DD-[a-z0-9]{8}; suffix from secrets.token_hex(4); do not use uuid4
-- Resolve FEATURE_SLUG, FEATURE_PATH, EVIDENCE_ROOT, FEATURE_RUN_ID, FEATURE_RUN_FOLDER
+- Resolve FEATURE_SLUG, FEATURE_PATH, FEATURE_INDEX_ROOT, FEATURE_RUN_ID, FEATURE_RUN_FOLDER
 - Create FEATURE_REVIEW_RUN_FOLDER and artifacts/
 - Initialize base run files per section 8: README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log, lifecycle-gates.log
 
 PRECONDITIONS:
 - feature.md reached G6 or G8 for FEATURE_ID
-- MODE=closeout-audit: EVIDENCE_ROOT/latest-run.json exists unless FEATURE_RUN_ID intentionally targets an older run
+- MODE=closeout-audit: FEATURE_INDEX_ROOT/latest-run.json exists unless FEATURE_RUN_ID intentionally targets an older run
 - MODE=candidate-audit: FEATURE_RUN_ID is set and FEATURE_RUN_FOLDER exists
 - DIFF_RANGE or explicit changed-file set can identify the changed files
 

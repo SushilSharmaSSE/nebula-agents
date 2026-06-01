@@ -12,9 +12,9 @@ OPTIONAL INPUTS (defaults apply when omitted):
 
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
 - `VALIDATE_RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start
-- `VALIDATE_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{VALIDATE_RUN_ID}`
+- `VALIDATE_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{VALIDATE_RUN_ID}`
 - `FEATURE_SLUG` — kebab-case slug for `{FEATURE_ID}` from `REGISTRY.md` (only when `FEATURE_ID` is set)
-- `EVIDENCE_ROOT` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}` (only when `FEATURE_ID` is set)
+- `FEATURE_INDEX_ROOT` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/features/{FEATURE_ID}-{FEATURE_SLUG}` (only when `FEATURE_ID` is set)
 
 Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command. Create `{VALIDATE_RUN_FOLDER}` and initialize the six §8 base run files from templates. Create the `artifacts/` subfolder for JSON output capture.
 

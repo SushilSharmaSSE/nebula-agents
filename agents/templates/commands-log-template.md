@@ -7,7 +7,7 @@
 Each non-empty line is one JSON object:
 
 ```json
-{"schema_version":1,"timestamp":"2026-05-19T14:20:00-04:00","cwd":"{PRODUCT_ROOT}","command":"pnpm test","exit_code":0,"artifacts":["planning-mds/operations/evidence/F####-{slug}/{run-id}/artifacts/test-results/pnpm-test.log"],"redactions":[]}
+{"schema_version":1,"timestamp":"2026-05-19T14:20:00-04:00","cwd":"{PRODUCT_ROOT}","command":"pnpm test","exit_code":0,"artifacts":["planning-mds/operations/evidence/runs/{run-id}/artifacts/test-results/pnpm-test.log"],"redactions":[]}
 ```
 
 Field rules:

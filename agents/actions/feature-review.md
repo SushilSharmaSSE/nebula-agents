@@ -49,7 +49,7 @@ artifacts changed, or when deployability evidence is missing or disputed.
 Write review outputs to the base/manual run evidence path:
 
 ```text
-{PRODUCT_ROOT}/planning-mds/operations/evidence/{RUN_ID}/
+{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}/
 ```
 
 Required output:
@@ -76,8 +76,8 @@ Load in this order when the work is feature-scoped:
 5. `agents/actions/feature.md`
 6. `{PRODUCT_ROOT}/planning-mds/features/F{NNNN}-{slug}/feature-assembly-plan.md`
 7. `{PRODUCT_ROOT}/planning-mds/features/F{NNNN}-{slug}/**`
-8. `{PRODUCT_ROOT}/planning-mds/operations/evidence/F{NNNN}-{slug}/latest-run.json`
-9. `{PRODUCT_ROOT}/planning-mds/operations/evidence/F{NNNN}-{slug}/{FEATURE_RUN_ID}/**`
+8. `{PRODUCT_ROOT}/planning-mds/operations/evidence/features/F{NNNN}-{slug}/latest-run.json`
+9. `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{FEATURE_RUN_ID}/**`
 10. `{PRODUCT_ROOT}/planning-mds/knowledge-graph/solution-ontology.yaml`
 11. `{PRODUCT_ROOT}/planning-mds/knowledge-graph/canonical-nodes.yaml`
 12. `{PRODUCT_ROOT}/planning-mds/knowledge-graph/feature-mappings.yaml`

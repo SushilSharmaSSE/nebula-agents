@@ -11,15 +11,15 @@ OPTIONAL INPUTS (defaults apply when omitted):
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
 - `FEATURE_SLUG` — kebab-case slug for `{FEATURE_ID}` from `REGISTRY.md`
 - `FEATURE_PATH` — `{PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}`
-- `FEATURE_EVIDENCE_ROOT` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}`
+- `FEATURE_INDEX_ROOT` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/features/{FEATURE_ID}-{FEATURE_SLUG}`
 - `PLAN_RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start
-- `PLAN_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{PLAN_RUN_ID}` (NOT under a feature evidence root — this is the non-feature base run path per §8)
+- `PLAN_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{PLAN_RUN_ID}` (NOT under a feature index root — this is the non-feature base run path per §8)
 
 Echo the resolved absolute `{PRODUCT_ROOT}` path on your first turn before any shell command; every command below assumes that resolution.
 
 Generate `{PLAN_RUN_ID}` once at session start using the contract format `YYYY-MM-DD-[a-z0-9]{8}` — date is the local date, suffix from `python3 -c "import secrets; print(secrets.token_hex(4))"`. Do not use `uuid4`. Do not regenerate after session start.
 
-Create `PLAN_RUN_FOLDER` at `{PLAN_RUN_FOLDER}/` (note: NOT under a feature evidence root — this is the non-feature base run path per §8). Initialize base run files from templates: `README.md`, `action-context.md`, `artifact-trace.md`, `gate-decisions.md`, an empty `commands.log` (JSONL), and an empty `lifecycle-gates.log`.
+Create `PLAN_RUN_FOLDER` at `{PLAN_RUN_FOLDER}/` (note: NOT under a feature index root — this is the non-feature base run path per §8). Initialize base run files from templates: `README.md`, `action-context.md`, `artifact-trace.md`, `gate-decisions.md`, an empty `commands.log` (JSONL), and an empty `lifecycle-gates.log`.
 
 Run `agents/actions/plan.md` for `FEATURE_ID` with `PHASE`. Phase A is PM requirements; Phase B is Architect architecture; A+B runs both sequentially. Determine `FEATURE_MODE` upfront: `new` when `FEATURE_ID` is reserved in `REGISTRY.md` Planned (Reserved IDs) but `{FEATURE_PATH}` does not exist; `existing` when `{FEATURE_PATH}` already contains at least `PRD.md` and a `STATUS.md` skeleton.
 
@@ -50,7 +50,7 @@ Load context in this order:
 
 Open these on demand only when lookup links them, the current gate needs them, or drift repair requires them: `{PRODUCT_ROOT}/planning-mds/api/<openapi-spec>.yaml`, `{PRODUCT_ROOT}/planning-mds/security/authorization-matrix.md`, `{PRODUCT_ROOT}/planning-mds/security/policies/policy.csv`, and `agents/<role>/references/**` only with a `ROUTER.md` row match.
 
-Don't generate `{PLAN_RUN_ID}` with `uuid4` or any non-contract format. Don't write or consume `current-run.json`. Don't produce role reports (`g0-*`, `test-*`, `code-review-*`, etc.) — those belong to the feature action's evidence package at `agents/actions/feature.md`, not the plan action. Don't create a feature evidence package at `{FEATURE_EVIDENCE_ROOT}/` during plan; that root is created later by `feature.md`. Don't skip the approval or ontology-sync gates. Don't edit `canonical-nodes.yaml` or `solution-ontology.yaml` outside the Architect phase. Don't treat lookup/KG mappings as authoritative over raw artifacts. Don't climb past max_auto_tier without recording a workstate.py escalate event.
+Don't generate `{PLAN_RUN_ID}` with `uuid4` or any non-contract format. Don't write or consume `current-run.json`. Don't produce role reports (`g0-*`, `test-*`, `code-review-*`, etc.) — those belong to the feature action's evidence package at `agents/actions/feature.md`, not the plan action. Don't create a feature evidence package at `{FEATURE_INDEX_ROOT}/` during plan; that root is created later by `feature.md`. Don't skip the approval or ontology-sync gates. Don't edit `canonical-nodes.yaml` or `solution-ontology.yaml` outside the Architect phase. Don't treat lookup/KG mappings as authoritative over raw artifacts. Don't climb past max_auto_tier without recording a workstate.py escalate event.
 
 Append every shell command to `{PLAN_RUN_FOLDER}/commands.log` as JSON Lines per the §13 schema.
 

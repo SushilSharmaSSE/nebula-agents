@@ -2,11 +2,11 @@
 """Patch prior approved feature evidence manifests to `status: superseded`.
 
 Invoked by `agents/actions/feature.md` and `agents/actions/build.md` per §17
-step 4 before writing a new `latest-run.json`. Scans the feature evidence
-root for sibling run folders matching the run-ID regex, reads each manifest,
-and rewrites `status: approved` to `superseded` for every run other than
-`--new-run-id`. Idempotent: re-running over a state where all prior approved
-manifests are already superseded is a no-op.
+step 4 before writing a new `latest-run.json`. Scans canonical run folders
+under `planning-mds/operations/evidence/runs/`, reads each manifest for the
+requested feature, and rewrites `status: approved` to `superseded` for every
+run other than `--new-run-id`. Idempotent: re-running over a state where all
+prior approved manifests are already superseded is a no-op.
 
 Exit codes:
 - 0: zero or more prior approved manifests successfully patched (no-op OK).
@@ -39,14 +39,8 @@ def resolve_product_root(raw: str | None) -> Path:
     return (FRAMEWORK_ROOT / ".." / "nebula-insurance-crm").resolve()
 
 
-def find_evidence_root(product_root: Path, feature_id: str) -> Path | None:
-    base = product_root / "planning-mds" / "operations" / "evidence"
-    if not base.exists():
-        return None
-    for child in base.iterdir():
-        if child.is_dir() and child.name.startswith(f"{feature_id}-"):
-            return child
-    return None
+def evidence_runs_root(product_root: Path) -> Path:
+    return product_root / "planning-mds" / "operations" / "evidence" / "runs"
 
 
 def atomic_write_json(target: Path, data: dict) -> None:
@@ -75,23 +69,26 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: --product-root {product_root} is not a directory", file=sys.stderr)
         return 1
 
-    evidence_root = find_evidence_root(product_root, args.feature)
-    if evidence_root is None:
-        print(f"error: feature evidence root not found for {args.feature} under {product_root}", file=sys.stderr)
+    runs_root = evidence_runs_root(product_root)
+    if not runs_root.exists():
+        print(f"error: evidence runs root not found under {product_root}", file=sys.stderr)
         return 1
 
-    new_manifest_path = evidence_root / args.new_run_id / "evidence-manifest.json"
+    new_manifest_path = runs_root / args.new_run_id / "evidence-manifest.json"
     if not new_manifest_path.exists():
         print(f"error: new run manifest missing: {new_manifest_path}", file=sys.stderr)
         return 1
     try:
-        json.loads(new_manifest_path.read_text(encoding="utf-8"))
+        new_manifest = json.loads(new_manifest_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as exc:
         print(f"error: cannot parse new run manifest {new_manifest_path}: {exc}", file=sys.stderr)
         return 1
+    if not isinstance(new_manifest, dict) or new_manifest.get("feature_id") != args.feature:
+        print(f"error: new run manifest {new_manifest_path} does not belong to {args.feature}", file=sys.stderr)
+        return 1
 
     patched: list[str] = []
-    for run_folder in sorted(evidence_root.iterdir()):
+    for run_folder in sorted(runs_root.iterdir()):
         if not run_folder.is_dir():
             continue
         if not RUN_ID_RE.fullmatch(run_folder.name):
@@ -106,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
         except (json.JSONDecodeError, OSError) as exc:
             print(f"error: cannot parse prior manifest {manifest_path}: {exc}", file=sys.stderr)
             return 1
-        if not isinstance(data, dict) or data.get("status") != "approved":
+        if not isinstance(data, dict) or data.get("feature_id") != args.feature or data.get("status") != "approved":
             continue
         data["status"] = "superseded"
         try:

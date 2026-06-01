@@ -13,9 +13,9 @@ OPTIONAL INPUTS (defaults apply when omitted):
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
   FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md
   FEATURE_PATH          = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG}
-  FEATURE_EVIDENCE_ROOT = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}
+  FEATURE_INDEX_ROOT = {PRODUCT_ROOT}/planning-mds/operations/evidence/features/{FEATURE_ID}-{FEATURE_SLUG}
   PLAN_RUN_ID           = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
-  PLAN_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/{PLAN_RUN_ID}
+  PLAN_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{PLAN_RUN_ID}
 
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
@@ -26,10 +26,10 @@ SESSION_SETUP:
     PLAN_RUN_ID = {date}-{suffix}
   DO NOT use uuid4. DO NOT regenerate {PLAN_RUN_ID} after session start.
 - Create base run folder per §8 (non-feature profile):
-    PLAN_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{PLAN_RUN_ID}/
+    PLAN_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{PLAN_RUN_ID}/
     mkdir -p {PLAN_RUN_FOLDER}
 - Initialize base run files from templates: README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log (empty JSONL), lifecycle-gates.log (empty)
-- Plan runs do NOT create a feature evidence package. The feature evidence root is created later by `agents/actions/feature.md` for the same FEATURE_ID.
+- Plan runs do NOT create a feature evidence package. The feature index root is created later by `agents/actions/feature.md` for the same FEATURE_ID.
 
 PRECONDITIONS:
 - {PLAN_RUN_FOLDER} created with base run files present
@@ -70,7 +70,7 @@ FORBIDDEN:
 - Generating {PLAN_RUN_ID} with uuid4 or any non-contract format
 - Writing or consuming `current-run.json` for any reason
 - Producing role reports (g0-*, test-*, code-review-*, etc.) — those belong to the feature action's evidence package
-- Creating a feature evidence package at {FEATURE_EVIDENCE_ROOT}/ during plan
+- Creating a feature evidence package at {FEATURE_INDEX_ROOT}/ during plan
 - Skipping APPROVAL or ONTOLOGY SYNC gates
 - Editing canonical-nodes.yaml or solution-ontology.yaml outside the Architect phase
 - Treating lookup/KG mappings as authoritative over raw artifacts

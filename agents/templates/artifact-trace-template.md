@@ -7,7 +7,7 @@
 Bulleted list of files the action consulted (planning docs, prior evidence, role inputs).
 
 - `planning-mds/features/F####-{slug}/PRD.md`
-- `planning-mds/operations/evidence/F####-{slug}/{prior-run-id}/evidence-manifest.json` (if rerun)
+- `planning-mds/operations/evidence/runs/{prior-run-id}/evidence-manifest.json` (if rerun)
 
 ## Artifacts Created Or Updated
 

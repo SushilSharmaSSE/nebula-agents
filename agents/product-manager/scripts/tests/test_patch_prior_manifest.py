@@ -27,7 +27,7 @@ def write_manifest(folder: Path, feature_id: str, run_id: str, status: str) -> N
 
 
 def make_evidence_root(tmp_path: Path, feature_id: str = "F0036") -> Path:
-    root = tmp_path / "product" / "planning-mds" / "operations" / "evidence" / f"{feature_id}-example"
+    root = tmp_path / "product" / "planning-mds" / "operations" / "evidence" / "runs"
     root.mkdir(parents=True)
     return root
 

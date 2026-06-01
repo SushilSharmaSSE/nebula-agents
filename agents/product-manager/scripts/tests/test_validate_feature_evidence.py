@@ -12,6 +12,10 @@ FIXTURE_ROOT = REPO_ROOT / "agents" / "product-manager" / "scripts" / "tests" / 
 RUN_ID = "2026-05-19-5ab6f922"
 
 
+def latest_run_path(product_root: Path, feature_slug: str) -> Path:
+    return product_root / "planning-mds" / "operations" / "evidence" / "features" / feature_slug / "latest-run.json"
+
+
 def run_validator(product_root: Path | None, *args: str) -> subprocess.CompletedProcess[str]:
     command = ["python3", str(VALIDATOR)]
     if product_root is not None:
@@ -211,8 +215,10 @@ def write_manifest_run(
     manifest_updates: dict[str, Any] | None = None,
     stage: str = "G0",
 ) -> Path:
-    run_folder = product_root / "planning-mds" / "operations" / "evidence" / feature_slug / run_id
+    run_folder = product_root / "planning-mds" / "operations" / "evidence" / "runs" / run_id
     run_folder.mkdir(parents=True, exist_ok=True)
+    feature_index_root = product_root / "planning-mds" / "operations" / "evidence" / "features" / feature_slug
+    feature_index_root.mkdir(parents=True, exist_ok=True)
     manifest = {
         "schema_version": 1,
         "feature_id": feature_id,
@@ -267,7 +273,7 @@ def write_manifest_run(
         # Honor the registry's `Folder` column when the closeout path is archived.
         closeout = manifest.get("feature_path_at_closeout") or f"planning-mds/features/{feature_slug}"
         feature_path = product_root / closeout
-        run_folder_rel = f"planning-mds/operations/evidence/{feature_slug}/{run_id}"
+        run_folder_rel = f"planning-mds/operations/evidence/runs/{run_id}"
         write_status_md(feature_path, feature_id, run_folder_rel, manifest["required_roles"], stage=stage)
         # Refresh signoff-ledger.md so it references the rows we just wrote — §21
         # validate_signoff_ledger_consistency would otherwise fire.
@@ -284,12 +290,12 @@ def write_manifest_run(
             "schema_version": 1,
             "feature_id": feature_id,
             "run_id": run_id,
-            "run_path": f"planning-mds/operations/evidence/{feature_slug}/{run_id}",
-            "manifest_path": f"planning-mds/operations/evidence/{feature_slug}/{run_id}/evidence-manifest.json",
+            "run_path": f"planning-mds/operations/evidence/runs/{run_id}",
+            "manifest_path": f"planning-mds/operations/evidence/runs/{run_id}/evidence-manifest.json",
             "status": "approved",
             "approved_on": "2026-05-19",
         }
-        (run_folder.parent / "latest-run.json").write_text(json.dumps(latest_payload, indent=2), encoding="utf-8")
+        (feature_index_root / "latest-run.json").write_text(json.dumps(latest_payload, indent=2), encoding="utf-8")
     return run_folder
 
 
@@ -582,7 +588,7 @@ def test_g6_unparseable_latest_with_run_id_does_not_emit_mismatch(tmp_path: Path
     product = tmp_path / "product"
     write_registry(product, archived="| F0001 | New Feature | 2026-05-19 |  | `archive/F0001-new/` |")
     run_folder = write_manifest_run(product, "F0001-new", "F0001", status="approved", latest=True)
-    (run_folder.parent / "latest-run.json").write_text("{", encoding="utf-8")
+    latest_run_path(product, "F0001-new").write_text("{", encoding="utf-8")
 
     result = run_validator(product, "--feature", "F0001", "--stage", "G6", "--run-id", RUN_ID, "--json")
     payload = json_result(result)

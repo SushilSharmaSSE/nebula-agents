@@ -18,12 +18,12 @@ OPTIONAL INPUTS (defaults apply when omitted):
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
   FEATURE_SLUG          = kebab-case slug for {FEATURE_ID} from REGISTRY.md (only when MODE=feature-scoped)
   FEATURE_PATH          = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_ID}-{FEATURE_SLUG} (only when MODE=feature-scoped)
-  OUTPUT_FOLDER         = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}/{RUN_ID} (only when MODE=feature-scoped)
+  OUTPUT_FOLDER         = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID} (only when MODE=feature-scoped)
   ARTIFACTS_FOLDER      = {OUTPUT_FOLDER}/artifacts/test-results (only when MODE=feature-scoped)
   COVERAGE_FOLDER       = {OUTPUT_FOLDER}/artifacts/coverage (only when MODE=feature-scoped)
   SCREENSHOTS_FOLDER    = {OUTPUT_FOLDER}/artifacts/screenshots (only when MODE=feature-scoped)
   TEST_RUN_ID           = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP (only when MODE=standalone)
-  TEST_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/{TEST_RUN_ID} (only when MODE=standalone)
+  TEST_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{TEST_RUN_ID} (only when MODE=standalone)
 
 SESSION_SETUP:
 - Resolve {PRODUCT_ROOT} per agents/docs/AGENT-USE.md → Session Setup
@@ -32,13 +32,13 @@ SESSION_SETUP:
 - Generate {TEST_RUN_ID} once at session start using contract format YYYY-MM-DD-[a-z0-9]{8} (suffix from `secrets.token_hex(4)`). DO NOT use uuid4.
 - For MODE=feature-scoped:
     REQUIRED PARAM: FEATURE_ID, RUN_ID (parent feature run ID)
-    OUTPUT_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{FEATURE_ID}-{FEATURE_SLUG}/{RUN_ID}/
+    OUTPUT_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}/
     DO NOT create a new run folder; OUTPUT_FOLDER must already exist
     ARTIFACTS_FOLDER   = {OUTPUT_FOLDER}/artifacts/test-results/    (raw test output)
     COVERAGE_FOLDER    = {OUTPUT_FOLDER}/artifacts/coverage/        (raw coverage output)
     SCREENSHOTS_FOLDER = {OUTPUT_FOLDER}/artifacts/screenshots/     (visual regression snapshots from Playwright/Cypress/etc., when applicable)
 - For MODE=standalone:
-    TEST_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{TEST_RUN_ID}/
+    TEST_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{TEST_RUN_ID}/
     mkdir -p {TEST_RUN_FOLDER}/artifacts/{test-results,coverage}
     Initialize base run files per §8
 

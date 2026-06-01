@@ -139,7 +139,7 @@ For governed completed-terminal features (per §6 eligibility — closeout date 
 
 - `Story Signoff Provenance` is append-only. Current signoff state is derived as the latest row per `(story, role)`; later rows override earlier ones (`status_stale_pass_followed_by_fail_fails` enforces this).
 - Story column values use the format `F####-S####` (e.g. `F0008-S0001`); freeform legacy formats are only tolerated for pre-contract historical rows in archived features that §6 marks as skipped.
-- Passing-row `Evidence` paths must resolve under the canonical feature run folder at `{PRODUCT_ROOT}/planning-mds/operations/evidence/F####-{slug}/{RUN_ID}/...` (`status_evidence_outside_package_fails` fires otherwise).
+- Passing-row `Evidence` paths must resolve under the canonical feature run folder at `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}/...` (`status_evidence_outside_package_fails` fires otherwise).
 - Every passing row carries an ISO `Date`, a `Reviewer`, and a `Verdict` from `PASS` / `PASS WITH RECOMMENDATIONS` / `APPROVED` / `APPROVED WITH RECOMMENDATIONS`.
 - `WITH RECOMMENDATIONS` rows require a matching PM Acceptance Line in `pm-closeout.md` per §15 PM Acceptance Line Format (`status_recommendation_without_acceptance_fails` enforces this at closeout).
 - The `Closeout Summary` table's `Closeout review date` row is the parseable signal §6 uses to classify a feature as pre-contract or post-contract. Missing/malformed values default the feature to post-contract and require canonical evidence.

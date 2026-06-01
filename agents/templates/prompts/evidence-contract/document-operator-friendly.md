@@ -11,7 +11,7 @@ OPTIONAL INPUTS (defaults apply when omitted):
 
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
 - `DOC_RUN_ID` — `YYYY-MM-DD-{secrets.token_hex(4)}` generated once at session start
-- `DOC_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/{DOC_RUN_ID}`
+- `DOC_RUN_FOLDER` — `{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{DOC_RUN_ID}`
 - `FEATURE_REF_SLUG` — kebab-case slug for `{FEATURE_REF}` from `REGISTRY.md` (only when `FEATURE_REF` is set)
 - `FEATURE_REF_PATH` — `{PRODUCT_ROOT}/planning-mds/features/{FEATURE_REF}-{FEATURE_REF_SLUG}` (only when `FEATURE_REF` is set)
 
@@ -25,7 +25,7 @@ Run `agents/actions/document.md` with `DOC_SCOPE`, `TARGETS`, optionally `SOURCE
 
 Load context in this order: `agents/ROUTER.md` → `agents/agent-map.yaml` → `agents/docs/AGENT-USE.md` → `agents/actions/document.md` → `agents/technical-writer/SKILL.md` → `SOURCE_CODE` paths read-only → for `FEATURE_REF`, `{FEATURE_REF_PATH}/README.md`, `{FEATURE_REF_PATH}/PRD.md`, and `{FEATURE_REF_PATH}/feature-assembly-plan.md` read-only.
 
-Don't generate `{DOC_RUN_ID}` with `uuid4`. Don't write into any feature evidence package (`{PRODUCT_ROOT}/planning-mds/operations/evidence/F####-*/`). Don't cite documentation as a substitute for required feature evidence reports such as `test-execution-report.md` or `code-review-report.md`. Don't execute compile/lint/runtime commands outside runtime containers. Don't skip the SELF-REVIEW or APPROVAL gates from `agents/actions/document.md`.
+Don't generate `{DOC_RUN_ID}` with `uuid4`. Don't write into any feature evidence package (`####-*/`). Don't cite documentation as a substitute for required feature evidence reports such as `test-execution-report.md` or `code-review-report.md`. Don't execute compile/lint/runtime commands outside runtime containers. Don't skip the SELF-REVIEW or APPROVAL gates from `agents/actions/document.md`.
 
 Append every shell command to `{DOC_RUN_FOLDER}/commands.log` per the §13 JSONL schema. Runtime verifications (API examples, CLI commands, health checks) run in runtime containers when feasible and their artifact paths are recorded.
 

@@ -205,7 +205,7 @@ Effective `2026-05-19`. Replaces the legacy `feature` artifact row. See `feature
 Every orchestrated run produces a base evidence package. Non-feature/manual runs (e.g. `agents/actions/validate.md`) use the base path:
 
 ```text
-{PRODUCT_ROOT}/planning-mds/operations/evidence/{RUN_ID}/
+{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}/
   README.md
   action-context.md
   artifact-trace.md
@@ -219,24 +219,25 @@ Every orchestrated run produces a base evidence package. Non-feature/manual runs
 Feature completion runs (`agents/actions/feature.md` and `agents/actions/build.md` when archiving a delivered feature) write to the feature profile path with the full §10 artifact matrix:
 
 ```text
-{PRODUCT_ROOT}/planning-mds/operations/evidence/F####-{slug}/
-  latest-run.json
-  {RUN_ID}/
-    <base files above>
-    evidence-manifest.json
-    feature-action-execution.md
-    g0-assembly-plan-validation.md
-    g1-runtime-preflight.md         # when runtime_bearing = true
-    g2-self-review.md
-    test-plan.md
-    test-execution-report.md
-    coverage-report.md
-    deployability-check.md
-    code-review-report.md
-    security-review-report.md       # when security-sensitive
-    signoff-ledger.md
-    pm-closeout.md
-    artifacts/{coverage,diffs,test-results,security,screenshots}/
+{PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{RUN_ID}/
+  <base files above>
+  evidence-manifest.json
+  feature-action-execution.md
+  g0-assembly-plan-validation.md
+  g1-runtime-preflight.md         # when runtime_bearing = true
+  g2-self-review.md
+  test-plan.md
+  test-execution-report.md
+  coverage-report.md
+  deployability-check.md
+  code-review-report.md
+  security-review-report.md       # when security-sensitive
+  signoff-ledger.md
+  pm-closeout.md
+  artifacts/{coverage,diffs,test-results,security,screenshots}/
+
+{PRODUCT_ROOT}/planning-mds/operations/evidence/features/F####-{slug}/
+  latest-run.json                 # pointer to approved run + manifest
 ```
 
 ### Global Frontend Lanes (§20)

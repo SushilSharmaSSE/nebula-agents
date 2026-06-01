@@ -85,7 +85,7 @@ def test_runtime_true_missing_preflight_fires(tmp_path: Path) -> None:
         manifest_updates={"runtime_bearing": True},
     )
     # Remove g1-runtime-preflight.md to provoke the rule.
-    (product / "planning-mds" / "operations" / "evidence" / "F0001-new" / RUN_ID / "g1-runtime-preflight.md").unlink()
+    (product / "planning-mds" / "operations" / "evidence" / "runs" / RUN_ID / "g1-runtime-preflight.md").unlink()
 
     result = run_validator(product, "--feature", "F0001", "--run-id", RUN_ID, "--stage", "G1", "--json")
     assert result.returncode == 1

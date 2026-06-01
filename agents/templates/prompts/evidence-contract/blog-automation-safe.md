@@ -13,7 +13,7 @@ OPTIONAL INPUTS (defaults apply when omitted):
 
 AUTO-RESOLVED (do not set; SESSION_SETUP and the orchestrator compute these):
   BLOG_RUN_ID           = YYYY-MM-DD-{secrets.token_hex(4)} generated at SESSION_SETUP
-  BLOG_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/{BLOG_RUN_ID}
+  BLOG_RUN_FOLDER       = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{BLOG_RUN_ID}
   FEATURE_REF_SLUG      = kebab-case slug for {FEATURE_REF} from REGISTRY.md (only when FEATURE_REF is set)
   FEATURE_REF_PATH      = {PRODUCT_ROOT}/planning-mds/features/{FEATURE_REF}-{FEATURE_REF_SLUG} (only when FEATURE_REF is set)
 
@@ -22,7 +22,7 @@ SESSION_SETUP:
 - Echo resolved absolute {PRODUCT_ROOT}
 - Generate {BLOG_RUN_ID} once at session start using contract format YYYY-MM-DD-[a-z0-9]{8} (suffix from `secrets.token_hex(4)`). DO NOT use uuid4.
 - Create base run folder per §8:
-    BLOG_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/{BLOG_RUN_ID}/
+    BLOG_RUN_FOLDER = {PRODUCT_ROOT}/planning-mds/operations/evidence/runs/{BLOG_RUN_ID}/
     mkdir -p {BLOG_RUN_FOLDER}
 - Initialize base run files from templates: README.md, action-context.md, artifact-trace.md, gate-decisions.md, commands.log, lifecycle-gates.log
 
@@ -41,7 +41,7 @@ CONTEXT LOADING ORDER:
 
 FORBIDDEN:
 - Generating {BLOG_RUN_ID} with uuid4
-- Writing into any feature evidence package (`{PRODUCT_ROOT}/planning-mds/operations/evidence/F####-*/`)
+- Writing into any feature evidence package (`####-*/`)
 - Citing a blog post as evidence for a completed terminal feature
 - Drafting before the EDITORIAL BRIEF gate per agents/actions/blog.md
 - Publishing or amplifying before the EDITORIAL GATE per agents/actions/blog.md
