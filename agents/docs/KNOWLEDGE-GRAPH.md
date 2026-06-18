@@ -227,6 +227,22 @@ know what else moves with you.
 | `workstate.py --state-file <p> dump --compact` | Recover structured state after context compaction |
 | `workstate.py --state-file <p> dump --current-view` | Decisions with superseded topics filtered out |
 
+### MCP server (same retrieval, structured transport)
+
+For harnesses that speak MCP, the same retrieval is exposed as local stdio tools by
+`{PRODUCT_ROOT}/scripts/kg/mcp_server.py` (committed `{PRODUCT_ROOT}/.mcp.json` launches
+it). It is a thin adapter over the **same** CLI builders — identical semantics, minified
+JSON payloads, telemetry tagged `source="mcp"`. The CLIs above remain the implementation
+and the fallback for non-MCP harnesses.
+
+| MCP tool | Wraps | Notes |
+|----------|-------|-------|
+| `kg_context` | `lookup.py` | feature/story slice or reverse file lookup; `fields=ids\|summaries\|full`, `tier 1-4`, `include` for top-level projection |
+| `kg_hint` | `hint.py` | pre-search routing; returns a structured (possibly empty) payload |
+| `kg_blast` | `blast.py` | impact radius; `compact` for summary only |
+| `kg_validate` | `validate.py` (read-only modes) | `check-drift\|check-symbols\|check-orphans\|check-coverage-gaps` → `{ok, errors, warnings}`; never mutates |
+| `kg_workstate` | `workstate.py` | the only writer; writes **only** under `{PRODUCT_ROOT}/.kg-state/workstate/<session>.yaml` (traversal/KG-dir writes rejected) |
+
 ### Other CLIs
 
 | Tool | Purpose |
