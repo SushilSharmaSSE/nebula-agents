@@ -399,57 +399,14 @@ Pre-deploy, run `python3 {PRODUCT_ROOT}/scripts/kg/diff-impact.py <release-range
 
 ## Development Workflow
 
-### 1. Understand Requirements
-- Read infrastructure requirements from Architect
-- Understand service dependencies
-- Identify environment needs (dev, staging, prod)
-- Review performance and security requirements
-
-### 2. Containerize Applications
-- Write Dockerfile for backend (C# .NET)
-- Write Dockerfile for frontend (React + Vite)
-- Write Dockerfile for AI/neuron (Python)
-- Optimize images (multi-stage builds)
-- Test containers locally
-
-### 3. Set Up Local Development
-- Create docker-compose.yml
-- Add PostgreSQL, authentik, Temporal services
-- Configure service networking
-- Add volume mounts for development
-- Test local setup
-
-### 4. Configure Environments
-- Define environment variables (.env files)
-- Create .env.example template
-- Set up secrets management for production
-- Document configuration
-
-### 5. Set Up CI/CD
-- Create GitHub Actions workflows
-- Configure build jobs
-- Configure test jobs
-- Configure deployment jobs
-- Add quality gates
-
-### 6. Set Up Monitoring
-- Configure Prometheus
-- Create Grafana dashboards
-- Set up Loki for logs
-- Configure alerts
-- Test monitoring locally
-
-### 7. Write Documentation
-- Deployment runbook
-- Environment setup guide
-- Troubleshooting guide
-- Architecture diagrams
-
-### 8. Test Deployment
-- Deploy to staging environment
-- Run smoke tests
-- Verify monitoring and logging
-- Test rollback procedure
+1. **Understand requirements** — infrastructure needs, service dependencies, environments (dev/staging/prod), performance and security constraints.
+2. **Containerize applications** — multi-stage Dockerfiles for backend (.NET), frontend (React + Vite), and AI/neuron (Python); test containers locally.
+3. **Set up local development** — `docker-compose.yml` with PostgreSQL, authentik, Temporal; service networking and dev volume mounts.
+4. **Configure environments** — `.env` files, `.env.example` template, production secrets management.
+5. **Set up CI/CD** — GitHub Actions build/test/deploy jobs with quality gates.
+6. **Set up monitoring** — Prometheus, Grafana dashboards, Loki logs, alerts; test locally.
+7. **Write documentation** — deployment runbook, environment setup guide, troubleshooting guide, architecture diagrams.
+8. **Test deployment** — deploy to staging, run smoke tests, verify monitoring and logging, test rollback.
 
 ## Troubleshooting
 

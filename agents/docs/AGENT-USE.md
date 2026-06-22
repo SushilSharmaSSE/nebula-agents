@@ -199,10 +199,10 @@ Use the prompt templates in `agents/templates/prompts/` as canonical operator
 starting points for action sessions. The evidence-contract variants are the
 preferred prompts when the action must produce or review formal evidence.
 
-- `agents/templates/prompts/plan-automation-safe.md`
-- `agents/templates/prompts/plan-operator-friendly.md`
-- `agents/templates/prompts/feature-automation-safe.md`
-- `agents/templates/prompts/feature-operator-friendly.md`
+- `agents/templates/prompts/evidence-contract/plan-automation-safe.md`
+- `agents/templates/prompts/evidence-contract/plan-operator-friendly.md`
+- `agents/templates/prompts/evidence-contract/feature-automation-safe.md`
+- `agents/templates/prompts/evidence-contract/feature-operator-friendly.md`
 - `agents/templates/prompts/evidence-contract/plan-review-automation-safe.md`
 - `agents/templates/prompts/evidence-contract/plan-review-operator-friendly.md`
 - `agents/templates/prompts/evidence-contract/feature-review-automation-safe.md`

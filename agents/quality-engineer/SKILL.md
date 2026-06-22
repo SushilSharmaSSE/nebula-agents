@@ -223,44 +223,14 @@ When ontology coverage exists for the target feature or story, run
 `python3 {PRODUCT_ROOT}/scripts/kg/lookup.py <feature-or-story-id>` before broad repo reads.
 Use `--file <repo-path>` to reverse-map an existing code file back into the ontology.
 
-**Tech Stack:**
+**Tech Stack:** per-layer tools and commands are in the **Quick Reference** tables below.
+- **Frontend:** Vitest, React Testing Library, Playwright, MSW, @axe-core/playwright, Lighthouse CI
+- **Backend:** xUnit, Shouldly, Testcontainers, WebApplicationFactory, Bruno CLI, k6, Coverlet
+- **AI/Neuron:** pytest, pytest-mock, pytest-benchmark, pytest-cov, FastAPI TestClient
+- **Security:** Trivy, OWASP ZAP, Semgrep (per-feature SAST gate), SonarQube Community (release-cadence reporting only, not the per-feature gate), Gitleaks
+- **Contract:** Pact.NET + self-hosted Pact Broker
 
-**Frontend Testing:**
-- Vitest (unit/component tests)
-- React Testing Library (component testing)
-- Playwright (E2E tests)
-- MSW - Mock Service Worker (API mocking)
-- @axe-core/playwright (accessibility)
-- Lighthouse CI (performance)
-
-**Backend Testing:**
-- xUnit (unit/integration tests)
-- Shouldly (readable assertions)
-- Testcontainers (database tests with real PostgreSQL)
-- WebApplicationFactory (in-memory API server)
-- Bruno CLI (API collection tests)
-- k6 (load testing)
-- Coverlet (code coverage)
-
-**AI/Neuron Testing:**
-- pytest (unit/integration/evaluation)
-- pytest-mock (LLM mocking)
-- pytest-benchmark (performance)
-- pytest-cov (coverage)
-- FastAPI TestClient (MCP server tests)
-
-**Security Testing:**
-- Trivy (vulnerability scanning)
-- OWASP ZAP (DAST)
-- Semgrep (SAST, per-feature gate)
-- SonarQube Community (release-cadence quality reporting, not the per-feature SAST gate)
-- Gitleaks (secrets detection)
-
-**Contract Testing:**
-- Pact.NET (consumer-driven contracts)
-- Self-hosted Pact Broker (contract storage)
-
-**All tools are 100% free and open source.**
+All tools are 100% free and open source.
 
 ## Containerized Playwright Fallback (Mandatory When Host Browser Runtime Is Blocked)
 
@@ -410,17 +380,9 @@ Coverage targets: ≥80% for business logic (all tiers).
 - Verify tests pass on CI
 - Check test execution time (optimize if slow)
 
-## Best Practices
+## Best Practices, CI/CD & Common Patterns
 
-Follow the Test Pyramid (70% unit, 20% integration, 10% E2E), Arrange-Act-Assert pattern, and test isolation principles. For detailed code examples of all best practices (Test Pyramid, Naming Conventions, AAA Pattern, Test Isolation, Mocking, Test Data Builders), see `agents/quality-engineer/references/code-patterns.md` - Section: Best Practices.
-
-## CI/CD Integration
-
-For the full GitHub Actions workflow YAML (frontend, backend, AI test jobs, quality gate, and separate security-job integration), see `agents/quality-engineer/references/code-patterns.md` - Section: CI/CD Integration.
-
-## Common Patterns
-
-For code examples of common test patterns (Testing Error Scenarios, Testing Async Operations, Parametrized Tests), see `agents/quality-engineer/references/code-patterns.md` - Section: Common Patterns.
+Follow the Test Pyramid (70% unit, 20% integration, 10% E2E), Arrange-Act-Assert, and test isolation. For detailed code examples — best practices (naming, AAA, isolation, mocking, test data builders), the full GitHub Actions workflow YAML (frontend/backend/AI jobs, quality gate, security-job integration), and common patterns (error scenarios, async operations, parametrized tests) — see `agents/quality-engineer/references/code-patterns.md`.
 
 ## Quick Reference
 

@@ -464,8 +464,6 @@ ls -la {PRODUCT_ROOT}/planning-mds/architecture/decisions/
 rg --files ../nebula-blog planning-mds agents | sort
 ```
 
----
-
 ## Troubleshooting
 
 ### Post Lacks Technical Substance
@@ -492,8 +490,6 @@ rg --files ../nebula-blog planning-mds agents | sort
 **Symptom:** Derivatives exist but the primary post is still a draft.
 **Cause:** Phase 2 was started prematurely.
 **Solution:** Phase 2 only begins after Phase 1 Gates 1–5 all pass.
-
----
 
 ## Related Files
 

@@ -420,18 +420,7 @@ Also run `lookup.py --symbol <name>` (or `hint.py --symbol <name>`) before editi
 5. Capture evidence notes/screenshots for handoff
 
 ### 8. Build & Validate (Feedback Loop)
-1. Run `pnpm --dir {PRODUCT_ROOT}/experience lint`
-2. If lint fails → fix violations, re-lint
-3. Run `pnpm --dir {PRODUCT_ROOT}/experience lint:theme`
-4. If theme lint fails → replace raw palette classes with semantic theme tokens
-5. Run `pnpm --dir {PRODUCT_ROOT}/experience build`
-6. If build fails → read error, fix issue, rebuild
-7. Run feature-local component/integration tests for the changed behavior
-8. If tests fail → read failure output, fix issue, retest
-9. Run `pnpm --dir {PRODUCT_ROOT}/experience test`
-10. If suite fails → fix issue or isolate the regression, retest
-11. When styling/theme behavior changes, run `pnpm --dir {PRODUCT_ROOT}/experience test:visual:theme`
-12. Only proceed to optimization when required checks pass
+Run in order, fixing and re-running on each failure: `lint` → `lint:theme` (replace raw palette classes with semantic theme tokens) → `build` → feature-local component/integration tests → `test` → `test:visual:theme` (when styling/theme behavior changed). All commands use `pnpm --dir {PRODUCT_ROOT}/experience`. Only proceed to optimization when required checks pass.
 
 ### 9. Optimize
 - Code split routes

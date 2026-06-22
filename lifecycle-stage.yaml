@@ -16,24 +16,28 @@ stages:
       - boundary_genericness
       - skill_regression
       - agent_map_schema
+      - template_alignment
   planning:
     description: Framework-side planning of new actions, roles, or templates.
     required_gates:
       - boundary_genericness
       - skill_regression
       - agent_map_schema
+      - template_alignment
   implementation:
     description: Framework-side implementation of new actions, roles, or templates.
     required_gates:
       - boundary_genericness
       - skill_regression
       - agent_map_schema
+      - template_alignment
   release-readiness:
     description: Framework release hardening before publishing a new tagged version.
     required_gates:
       - boundary_genericness
       - skill_regression
       - agent_map_schema
+      - template_alignment
 gates:
   boundary_genericness:
     description: Prevent solution-specific leakage into generic framework agents. Embedded denylist is authoritative; --glossary override is optional.
@@ -50,3 +54,8 @@ gates:
     command:
       - python3
       - agents/scripts/validate_agent_map.py
+  template_alignment:
+    description: Validate action ↔ prompt-template alignment and evidence-template alignment rules (tpl_*).
+    command:
+      - python3
+      - agents/scripts/validate_templates.py
